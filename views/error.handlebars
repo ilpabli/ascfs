@@ -1,0 +1,35 @@
+<header>
+  <nav class="p-3 mb-2 text-white">
+    <div class="container-fluid">
+      <p class="fs-1 text-center">
+        Oops ocurrio un error
+      </p>
+    </div>
+  </nav>
+</header>
+<main>
+<section>
+    <div class="container-fluid text-center mt-3">
+        <div class="row justify-content-md-center">
+          <div class="card mt-1" style="width: 18rem;">
+            <div class="card-body">
+              <h5 class="card-title">{{this.title}}</h5>
+              <p class="card-text">Motivo:
+                {{this.error}}
+                <br />
+            </div>
+          </div>
+        </div>
+            <div class="container-fluid text-center mt-5">
+      <div class="row justify-content-md-center">
+			<nav class="col-md-auto">
+				<ul class="pagination">
+					<li class="page-item active" aria-current="page">
+					<a class="page-link" href={{this.return}}>Reintentar</a>
+				</ul>
+			</nav>
+      </div>
+		</div>
+    </div>
+  </section>
+</main>

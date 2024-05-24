@@ -1,0 +1,55 @@
+<header>
+  <nav class="p-3 mb-2 text-white">
+    <div class="container-fluid">
+      <p class="fs-1 text-center">
+        Panel de administracion de usuarios
+      </p>
+    </div>
+  </nav>
+</header>
+<main>
+  {{#if admin}}               
+  <section id="" class="container-sm row text-center mt-5">
+          {{#each listUsers }}
+        <div class="col">
+          <div class="card mt-3" style="width: 18rem;">
+            <div class="card-body">
+              <h5 class="card-title">Nombre: {{this.first_name}} {{this.last_name}}</h5></a>
+              <p class="card-text">email:
+                {{this.email}}
+                <br />
+                role:
+                {{this.role}}
+                <br />
+                id:
+                {{this._id}}
+            </div>
+          </div>
+        </div>
+      {{/each}}
+  </section>
+
+  <section id="" class="container-sm row text-center mt-5">
+      <h2>Eliminar Usuario segun ID</h2>
+  <form id="deleteForm">
+    <label for="userId">ID del usuario a eliminar:</label>
+    <input type="text" id="userId" name="userId" required>
+    <button type="submit">Eliminar</button>
+  </form>
+  </section>
+
+<section id="" class="container-sm row text-center mt-5">
+  <h2>Actualizar Role del usuario</h2>
+  <div>
+    <label for="userid">ID</label>
+    <input type="text" id="userid" />
+    <label for="Role">Role:</label>
+    <input type="text" id="Role" />
+    <button onclick="actualizarRole()">Actualizar</button>
+  </div>
+</section>
+  {{/if}}
+
+  </section>
+</main>
+<script src="/js/users.js"></script>

@@ -1,0 +1,53 @@
+<header>
+  <nav class="p-3 mb-2 text-white">
+    <div class="container-fluid">
+      <p class="fs-1 text-center">
+        Detalle de producto
+      </p>
+    </div>
+  </nav>
+</header>
+<main>
+  <section>
+    <div class="container-fluid text-center mt-3">
+        <div class="row justify-content-md-center">
+          <div class="card mt-1" style="width: 18rem;">
+            <div class="card-body">
+              <h5 class="card-title">{{product.title}}</h5>
+              <p class="card-text">Su estado es:
+                {{product.description}}
+                <br />
+                Precio:
+                {{product.price}}
+                <br />
+                Codigo:
+                {{product.code}}
+                <br />
+                Stock:
+                {{product.stock}}
+                <br />
+                Categoria:
+                {{product.category}}
+                <br />
+                ID:
+                {{product._id}}</p>
+                 <form action="/api/carts/{{idcart}}/products/{{product._id}}" method=post name="form{{product._id}}">
+                 <button type="submit" class="btn btn-primary">Agregar</button>
+                 </form> 
+            </div>
+          </div>
+        </div>
+    </div>
+    <div class="container-fluid text-center mt-5">
+      <div class="row justify-content-md-center">
+			<nav class="col-md-auto">
+				<ul class="pagination">
+					<li class="page-item active" aria-current="page">
+					<a class="page-link" href="/products">Volver</a>
+				</ul>
+			</nav>
+      </div>
+		</div>
+
+  </section>
+</main>

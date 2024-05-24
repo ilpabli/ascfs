@@ -1,0 +1,47 @@
+:root {
+  --gradient: linear-gradient(
+    90deg,
+    rgba(131, 3, 224, 1) 0%,
+    rgba(21, 200, 101, 0.9934174353335085) 100%
+  );
+  --p-color: #008bf6;
+  --radius: 25px;
+  --shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+body {
+  background: var(--gradient);
+}
+
+.bg-light {
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.login-section {
+  margin: 50px 20px;
+  border-radius: var(--radius);
+}
+
+.navbar {
+  margin: 10px;
+  border-radius: var(--radius);
+}
+
+.form-control {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  border-radius: var(--radius);
+  border: 0px;
+  border-bottom: 1px solid var(--p-color);
+}
+
+.btn-primary {
+  border-radius: var(--radius);
+  border: 0;
+}
+
+.btn-outline-danger {
+  border-radius: var(--radius);
+}
