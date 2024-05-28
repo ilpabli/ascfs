@@ -2,9 +2,9 @@ import enviroment from "./enviroment.js";
 import mongoose from "mongoose";
 
 let Users;
-let Products;
-let Carts;
+let Tickets;
 let Chats;
+let Clients;
 switch (enviroment.PERSISTENCE.toLowerCase()) {
   case "mongo":
     mongoose.connect(enviroment.DB);
@@ -12,15 +12,16 @@ switch (enviroment.PERSISTENCE.toLowerCase()) {
       "../user/dao/userMongo.dao.js"
     );
     Users = UserMongoDAO;
-    const { default: ProductMongoDao } = await import(
-      "../product/dao/productMongo.dao.js"
-    );
-    Products = ProductMongoDao;
 
-    const { default: CartMongoDAO } = await import(
-      "../cart/dao/cartMongo.dao.js"
+    const { default: TicketMongoDao } = await import(
+      "../ticket/dao/ticketMongo.dao.js"
     );
-    Carts = CartMongoDAO;
+    Tickets = TicketMongoDao;
+
+    const { default: ClientMongoDao } = await import(
+      "../client/dao/clientMongo.dao.js"
+    );
+    Clients = ClientMongoDao;
 
     const { default: ChatMongoDAO } = await import(
       "../chat/dao/chatMongo.dao.js"
@@ -34,4 +35,4 @@ switch (enviroment.PERSISTENCE.toLowerCase()) {
     break;
 }
 
-export { Users, Products, Carts, Chats };
+export { Users, Tickets, Chats, Clients };

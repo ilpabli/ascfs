@@ -3,11 +3,17 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
   first_name: String,
   last_name: String,
-  email: {
+  user: {
     type: String,
     unique: true,
     required: true,
     index: true,
+  },
+  email: {
+    type: String,
+    unique: true,
+    required: false,
+    default: "",
   },
   password: String,
   tickets: {
@@ -36,7 +42,12 @@ const userSchema = new mongoose.Schema({
   },
   last_connection: {
     type: Date,
-    default: Date.now,
+    default: () => {
+      const date = new Date();
+      const gmtMinus3Offset = -3 * 60;
+      date.setMinutes(date.getMinutes() + gmtMinus3Offset);
+      return date;
+    },
   },
 });
 

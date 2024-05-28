@@ -7,8 +7,6 @@ import {
   isAdmin,
   middlewarePassportJWT,
 } from "../middleware/jwt.middleware.js";
-import { updateUser } from "./middleware/dto.middleware.js";
-import { uploadFilesMiddleware } from "../middleware/uploadfiles.middleware.js";
 
 const userController = new UserRepository(new Users());
 const usersRouter = Router();
@@ -48,127 +46,47 @@ usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
   res.clearCookie("token").redirect("/login");
 });
 
-usersRouter.get("/premium/:uid", middlewarePassportJWT, async (req, res) => {
+usersRouter.delete("/:user", async (req, res) => {
   try {
-    const updateRole = await userController.update2Premium(req.params.uid);
-    req.logger.info("User permission update");
-    res.status(201).send(updateRole);
+    const delUser = await userController.deleteUser(req.params.user);
+    req.logger.info("User Delete");
+    res.status(200).json({ message: "Usuario borrado: " + req.params.user });
   } catch (err) {
-    console.log(err.cause);
-    res.status(400).send({ status: "error", error: err.name });
+    req.logger.error("User not found");
+    res.status(400).send({ status: "error", error: err.message });
   }
 });
 
-usersRouter.get("/current", middlewarePassportJWT, updateUser, (req, res) => {
-  const user = req.user;
+usersRouter.put("/:user", async (req, res) => {
   try {
-    res.status(201).send(user);
+    const user = await userController.getByUser(req.params.user);
+    if (req.user.role === "admin") {
+      const updateUser = await userController.updateUser(
+        req.params.user,
+        req.body
+      );
+      req.logger.info("User Updated");
+      res.status(201).send(updateUser);
+    } else if (req.user.user === req.params.user) {
+      const updateUser = await userController.updateUser(
+        req.params.user,
+        req.body
+      );
+      req.logger.info("Product Updated by owner");
+      res.status(201).send(updateUser);
+    } else {
+      req.logger.warning("You dont have permissions");
+      res.status(403).send("Permission denied");
+    }
   } catch (err) {
     res.status(500).send({ err });
   }
 });
 
-usersRouter.post("/requestpassword", async (req, res) => {
-  try {
-    const request = await userController.requestPassword(req.body.email);
-    res
-      .status(200)
-      .json({ message: "Correo de recuperación enviado a " + req.body.email });
-  } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.post(
-  "/renewpassword",
-  passport.authenticate("renewpassword", {
-    failureRedirect: "/renewfail",
-    session: false,
-    failureMessage: false,
-  }),
-  async (req, res) => {
-    try {
-      res.status(200).json({
-        message:
-          "Password Actualizada con exito para el usuario " + req.user.email,
-      });
-    } catch (err) {
-      res.status(500).send({ err });
-    }
-  }
-);
-
-usersRouter.delete(
-  "/:uid",
-  middlewarePassportJWT,
-  isAdmin,
-  async (req, res) => {
-    try {
-      const delUser = await userController.deleteUser(req.params.uid);
-      res
-        .status(200)
-        .json({ message: "Usuario borrado segun id: " + req.params.uid });
-    } catch (err) {
-      res.status(500).send({ err });
-    }
-  }
-);
-
-usersRouter.post(
-  "/:uid/documents",
-  middlewarePassportJWT,
-  uploadFilesMiddleware.fields([
-    { name: "profile", maxCount: 1 },
-    { name: "product", maxCount: 5 },
-    { name: "document", maxCount: 5 },
-  ]),
-  async (req, res) => {
-    try {
-      const uid = req.params.uid;
-      const { files } = req;
-      if (Array.isArray(files.document)) {
-        const updateDocuments = await userController.updateDocuments(
-          uid,
-          req.body,
-          files
-        );
-        res.status(200).json({ message: "Archivos subidos con éxito", files });
-      } else {
-        res.status(200).json({ message: "Archivos subidos con éxito", files });
-      }
-    } catch (err) {
-      res.status(500).send({ err });
-    }
-  }
-);
-
-usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
+usersRouter.get("/", async (req, res) => {
   const listUsers = await userController.getAllFiltered();
   try {
     res.status(201).send(listUsers);
-  } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.delete("/", middlewarePassportJWT, async (req, res) => {
-  try {
-    const deleteUsers = await userController.deleteInactiveUsers();
-    res.status(201).send(deleteUsers);
-  } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.put("/:uid", middlewarePassportJWT, isAdmin, async (req, res) => {
-  try {
-    const updateRole = await userController.updateRole(
-      req.params.uid,
-      req.body.role
-    );
-    res
-      .status(200)
-      .json({ message: "Usuario borrado segun id: " + req.params.uid });
   } catch (err) {
     res.status(500).send({ err });
   }
