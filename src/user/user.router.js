@@ -23,23 +23,43 @@ usersRouter.post(
   }
 );
 
-usersRouter.post(
-  "/auth",
-  passport.authenticate("login", {
-    failureRedirect: "/loginfail",
-    session: false,
-    failureMessage: false,
-  }),
-  async (req, res) => {
-    const token = generateToken(req.user);
-    res
-      .cookie("token", token, {
+usersRouter.post("/auth", (req, res, next) => {
+  passport.authenticate("login", { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({ message: info.message });
+    }
+    req.logIn(user, { session: false }, (err) => {
+      if (err) {
+        return next(err);
+      }
+      const token = generateToken(user); // Asegúrate de que generateToken esté definido y funcione correctamente
+      res.cookie("token", token, {
         httpOnly: true,
         maxAge: 60000,
-      })
-      .redirect("/products");
-  }
-);
+      });
+      return res.status(200).json({ message: "Login Success" });
+    });
+  })(req, res, next);
+});
+
+// usersRouter.post(
+//   "/auth",
+//   passport.authenticate("login", {
+//     session: false,
+//     failureMessage: false,
+//   }),
+//   async (req, res) => {
+//     const token = generateToken(req.user);
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       maxAge: 60000,
+//     });
+//     res.status(200).json({ message: "Login Success" });
+//   }
+// );
 
 usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
   const updateDate = await userController.updateDate(req.user._id);

@@ -24,4 +24,5 @@ export default {
   MAIL_SERVICE: process.env.MAIL_SERVICE,
   MAIL_USER: process.env.MAIL_USER,
   MAIL_PASS: process.env.MAIL_PASS,
+  FRONTEND_URL: process.env.FRONTEND_URL,
 };

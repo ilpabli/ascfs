@@ -2,6 +2,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import passport from "passport";
+import cors from "cors";
 import incializePassport from "./config/passport.config.js";
 import enviroment from "./config/enviroment.js";
 import { loggerMiddleware } from "./middleware/logger.middleware.js";
@@ -16,6 +17,12 @@ import { initSocket } from "./chat/chat.socket.js";
 const app = express();
 
 // Middleware
+app.use(
+  cors({
+    credentials: true,
+    origin: enviroment.FRONTEND_URL,
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser(enviroment.SECRET));
