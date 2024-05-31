@@ -31,6 +31,12 @@ export const ticketSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  ele_esc: {
+    type: String,
+    enum: ["Elevator", "Escalator"],
+    default: "Elevator",
+    index: true,
+  },
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "users",
