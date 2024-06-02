@@ -45,22 +45,6 @@ usersRouter.post("/auth", (req, res, next) => {
   })(req, res, next);
 });
 
-// usersRouter.post(
-//   "/auth",
-//   passport.authenticate("login", {
-//     session: false,
-//     failureMessage: false,
-//   }),
-//   async (req, res) => {
-//     const token = generateToken(req.user);
-//     res.cookie("token", token, {
-//       httpOnly: true,
-//       maxAge: 60000,
-//     });
-//     res.status(200).json({ message: "Login Success" });
-//   }
-// );
-
 usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
   const updateDate = await userController.updateDate(req.user._id);
   res.clearCookie("token").redirect("/login");
@@ -111,5 +95,26 @@ usersRouter.get("/", async (req, res) => {
     res.status(500).send({ err });
   }
 });
+
+usersRouter.get("/technicians", async (req, res) => {
+  const listTechnicians = await userController.getAllTechnicians();
+  
+  try {
+    res.status(201).send(listTechnicians);
+  } catch (err) {
+    res.status(500).send({ err });
+  }
+});
+
+usersRouter.get("/:user", async (req, res) => {
+  const listUsers = await userController.getByUser(req.params.user);
+  try {
+    res.status(201).send(listUsers);
+  } catch (err) {
+    res.status(500).send({ err });
+  }
+});
+
+
 
 export { usersRouter };

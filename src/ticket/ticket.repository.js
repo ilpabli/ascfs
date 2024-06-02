@@ -7,8 +7,12 @@ export default class TicketRepository {
     return await this.dao.addTicket(ticket);
   }
 
-  async getTickets(limit, page, query) {
-    return await this.dao.getTickets(limit, page, query);
+  async getTickets() {
+    return await this.dao.getTickets();
+  }
+
+  async getTicketsFiltered(limit, page, query) {
+    return await this.dao.getTicketsFiltered(limit, page, query);
   }
 
   async getTicketsforSocket() {
@@ -21,6 +25,10 @@ export default class TicketRepository {
 
   async updateTicket(id, field) {
     return await this.dao.updateTicket(id, field);
+  }
+
+  async assingTicket(ticketId, assing) {
+    return await this.dao.assingTicket(ticketId, assing);
   }
 
   async deleteTicket(ticketData) {

@@ -11,6 +11,10 @@ export default class UserRepository {
     return await this.dao.getAllFiltered();
   }
 
+  async getAllTechnicians() {
+    return await this.dao.getAllTechnicians();
+  }
+
   async createUser(userData) {
     return await this.dao.createUser(userData);
   }

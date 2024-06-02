@@ -28,7 +28,7 @@ const incializePassport = () => {
     new LocalStrategy(
       { passReqToCallback: true, usernameField: "user" },
       async (req, username, password, done) => {
-        const { first_name, last_name, img, email } = req.body;
+        const { first_name, last_name, img, email, role } = req.body;
         try {
           let user = await userController.getByUser(username);
           if (user) {
@@ -42,6 +42,7 @@ const incializePassport = () => {
             user: username,
             password: hashPassword(password),
             img,
+            role,
             email,
           };
           let createUser = await userController.createUser(newUser);

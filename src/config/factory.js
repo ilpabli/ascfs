@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 
 let Users;
 let Tickets;
-let Chats;
 let Clients;
 switch (enviroment.PERSISTENCE.toLowerCase()) {
   case "mongo":
@@ -22,11 +21,6 @@ switch (enviroment.PERSISTENCE.toLowerCase()) {
       "../client/dao/clientMongo.dao.js"
     );
     Clients = ClientMongoDao;
-
-    const { default: ChatMongoDAO } = await import(
-      "../chat/dao/chatMongo.dao.js"
-    );
-    Chats = ChatMongoDAO;
     console.log("Configuracion MongoDB Cargada con exito");
     break;
 
@@ -35,4 +29,4 @@ switch (enviroment.PERSISTENCE.toLowerCase()) {
     break;
 }
 
-export { Users, Tickets, Chats, Clients };
+export { Users, Tickets, Clients };

@@ -24,10 +24,7 @@ clientsRouter.post("/", async (req, res) => {
 
 clientsRouter.get("/", async (req, res) => {
   try {
-    let limit = parseInt(req.query.limit) || 10;
-    let page = parseInt(req.query.page) || 1;
-    let query = req.query;
-    let listClients = await clientController.getAll(limit, page, query);
+    let listClients = await clientController.getAll();
     res.status(201).send(listClients);
   } catch (err) {
     res.status(500).send({ err });

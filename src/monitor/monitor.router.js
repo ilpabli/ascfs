@@ -1,13 +1,13 @@
 import { Router } from "express";
 
 // Instanciamos el router
-const chatRouter = Router();
+const monitorRouter = Router();
 
 // Definimos la ruta para el home
-chatRouter.get("/", (req, res) => {
+monitorRouter.get("/", (req, res) => {
   // Renderizo la vista del CHAT
   res.render("chat");
 });
 
 // Exportamos el router
-export { chatRouter };
+export { monitorRouter };

@@ -22,10 +22,7 @@ ticketsRouter.post("/", async (req, res) => {
 
 ticketsRouter.get("/", async (req, res) => {
   try {
-    let limit = parseInt(req.query.limit) || 10;
-    let page = parseInt(req.query.page) || 1;
-    let query = req.query;
-    let listTickets = await ticketController.getTickets(limit, page, query);
+    let listTickets = await ticketController.getTickets();
     res.status(201).send(listTickets);
   } catch (err) {
     req.logger.error("Error in get tickets");
@@ -45,7 +42,7 @@ ticketsRouter.get("/:ticket", async (req, res) => {
 
 ticketsRouter.put("/:ticket", async (req, res) => {
   try {
-    const product = await ticketController.getTicketforId(req.params.ticket);
+    const ticket = await ticketController.getTicketforId(req.params.ticket);
     if (req.user.role === "admin") {
       const updateTicket = await ticketController.updateTicket(
         req.params.ticket,
@@ -64,6 +61,20 @@ ticketsRouter.put("/:ticket", async (req, res) => {
       req.logger.warning("You dont have permissions");
       res.status(403).send("Permission denied");
     }
+  } catch (err) {
+    res.status(500).send({ err });
+  }
+});
+
+ticketsRouter.put("/assing/:ticket", async (req, res) => {
+  try {
+    const ticket = await ticketController.getTicketforId(req.params.ticket); 
+      const updateTicket = await ticketController.assingTicket(
+        req.params.ticket,
+        req.body
+      );
+      req.logger.info("User Assigned");
+      res.status(201).send(updateTicket);
   } catch (err) {
     res.status(500).send({ err });
   }

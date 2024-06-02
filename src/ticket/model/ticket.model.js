@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
+import { format } from "date-fns";
 
 export const ticketSchema = new mongoose.Schema({
   ticket_id: {
@@ -9,17 +10,16 @@ export const ticketSchema = new mongoose.Schema({
   },
   ticket_status: {
     type: String,
-    enum: ["Open", "In progress", "Closed"],
-    default: "Open",
+    enum: ["Abierto", "En proceso", "Cerrado"],
+    default: "Abierto",
     index: true,
   },
   ticket_createdAt: {
-    type: Date,
+    type: String, 
     default: () => {
       const date = new Date();
-      const gmtMinus3Offset = -3 * 60;
-      date.setMinutes(date.getMinutes() + gmtMinus3Offset);
-      return date;
+      date.setMinutes(date.getMinutes());
+      return format(date, "HH:mm yyyy-MM-dd");
     },
   },
   job_data: {
@@ -33,8 +33,8 @@ export const ticketSchema = new mongoose.Schema({
   },
   ele_esc: {
     type: String,
-    enum: ["Elevator", "Escalator"],
-    default: "Elevator",
+    enum: ["Ascensor", "Escalera"],
+    default: "Ascensor",
     index: true,
   },
   owner: {
@@ -42,8 +42,8 @@ export const ticketSchema = new mongoose.Schema({
     ref: "users",
   },
   assigned_to: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "users",
+    type: String,
+    default: "",
   },
   description: {
     type: String,
@@ -55,8 +55,8 @@ export const ticketSchema = new mongoose.Schema({
   },
   status_ele_esc: {
     type: String,
-    enum: ["Out of service", "In service"],
-    default: "Out of service",
+    enum: ["Fuera de servicio", "En servicio"],
+    default: "Fuera de servicio",
   },
   rt: {
     type: String,

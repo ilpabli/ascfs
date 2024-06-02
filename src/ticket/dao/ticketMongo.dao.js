@@ -1,5 +1,6 @@
 import { ticketModel } from "../model/ticket.model.js";
 import { clientModel } from "../../client/model/client.model.js";
+import { userModel } from "../../user/model/user.model.js";
 import MailingService from "../../mailing/mailing.service.js";
 
 export default class ProductMongoDAO {
@@ -34,17 +35,21 @@ export default class ProductMongoDAO {
     return await this.model.create(ticket);
   }
 
-  async getTickets(limit, page, query) {
+  async getTickets() {
+    return await this.model.find().lean().populate("job_data");
+  }
+
+  async getTicketsFiltered(limit, page, query) {
     let options = { limit, page };
     let filter = {};
     if (query?.ticket_status) {
       filter.ticket_status = query.ticket_status;
     }
-    return await this.model.find(filter, options);
+    return await this.model.find(filter, options).lean().populate("job_data");
   }
 
   async getTicketsforSocket() {
-    return await this.model.find().lean();
+    return await this.model.find({ status_ele_esc: 'Fuera de servicio' }).lean().populate("job_data");
   }
 
   async getTicketforId(id) {
@@ -52,11 +57,28 @@ export default class ProductMongoDAO {
     if (!ticket) {
       throw new Error(`Ticket ${id} not found`);
     }
-    return await this.model.findOne({ ticket_id: id }).lean();
+    return await this.model.findOne({ ticket_id: id }).lean().populate("job_data");
   }
 
   async updateTicket(id, field) {
     return await this.model.updateOne({ ticket_id: id }, field);
+  }
+
+  async assingTicket(ticketId, assing) {
+    const user = await userModel.findOne({user: assing.user });
+    if (!user) {
+      throw new Error(`User ${assing.user} not found`);
+    }
+    const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+    if (!ticket) {
+      throw new Error(`Ticket ${ticketId} not found`);
+    }
+    user.tickets.push(ticket);
+    await user.save();
+    return await this.model.updateOne(
+      { ticket_id: ticketId },
+      { assigned_to: user.user }
+    );
   }
 
   async deleteTicket(ticketData) {

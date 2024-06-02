@@ -10,8 +10,8 @@ import { loggerMiddleware } from "./middleware/logger.middleware.js";
 import { ticketsRouter } from "./ticket/ticket.router.js";
 import { usersRouter } from "./user/user.router.js";
 import { clientsRouter } from "./client/client.router.js";
-import { chatRouter } from "./chat/chat.router.js";
-import { initSocket } from "./chat/chat.socket.js";
+import { monitorRouter } from "./monitor/monitor.router.js";
+import { initSocket } from "./monitor/monitor.socket.js";
 
 // Creo la app
 const app = express();
@@ -39,7 +39,7 @@ app.use(passport.initialize());
 app.use("/api/tickets", ticketsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/clients", clientsRouter);
-app.use("/chat", chatRouter);
+app.use("/monitor", monitorRouter);
 
 // Arranco mi webServer en el port 8080
 const webServer = app.listen(enviroment.PORT, () => {

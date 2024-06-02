@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { format } from "date-fns";
 
 const userSchema = new mongoose.Schema({
   first_name: String,
@@ -11,9 +12,6 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
-    required: false,
-    default: "",
   },
   password: String,
   tickets: {
@@ -28,6 +26,7 @@ const userSchema = new mongoose.Schema({
   img: String,
   role: {
     type: String,
+    enum: ["user", "admin", "supervisor", "technician", "receptionist"],
     default: "user",
   },
   gps_point: {
@@ -41,12 +40,11 @@ const userSchema = new mongoose.Schema({
     },
   },
   last_connection: {
-    type: Date,
+    type: String,
     default: () => {
       const date = new Date();
-      const gmtMinus3Offset = -3 * 60;
-      date.setMinutes(date.getMinutes() + gmtMinus3Offset);
-      return date;
+      date.setMinutes(date.getMinutes());
+      return format(date, "HH:mm yyyy-MM-dd");
     },
   },
 });

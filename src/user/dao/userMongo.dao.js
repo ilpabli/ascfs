@@ -1,4 +1,5 @@
 import { userModel } from "../model/user.model.js";
+import { format } from "date-fns";
 
 export default class UserMongoDAO {
   constructor() {
@@ -6,22 +7,29 @@ export default class UserMongoDAO {
   }
 
   async getAll() {
-    return await this.model.find().lean();
+    return await this.model.find().populate("tickets").lean();
   }
 
   async getAllFiltered() {
-    const list = await this.model.find();
+    const list = await this.model.find().populate("tickets").lean();
     const newList = [];
     list.forEach((eLe) => {
       const user = {
+        _id: eLe._id,
         full_name: eLe.first_name + " " + eLe.last_name,
         user: eLe.user,
         role: eLe.role,
         last_connection: eLe.last_connection,
+        email: eLe.email,
+        tickets: eLe.tickets,
       };
       newList.push(user);
     });
     return newList;
+  }
+
+  async  getAllTechnicians() {
+    return await this.model.find({ role: 'technician' }).populate("tickets").lean();
   }
 
   async createUser(userData) {
@@ -29,15 +37,17 @@ export default class UserMongoDAO {
   }
 
   async getByUser(user) {
+    if (!user) {
+      throw new Error(`User ${id} not found`);
+    }
     return await this.model.findOne({ user: user }).populate("tickets").lean();
   }
 
   async updateDate(uid) {
     const getGMTMinus3Date = () => {
       const date = new Date();
-      const gmtMinus3Offset = -3 * 60;
-      date.setMinutes(date.getMinutes() + gmtMinus3Offset);
-      return date;
+      date.setMinutes(date.getMinutes());
+      return format(date, "HH:mm yyyy-MM-dd");
     };
 
     const gmtMinus3Date = getGMTMinus3Date();
