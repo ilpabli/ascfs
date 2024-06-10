@@ -23,6 +23,10 @@ export default class UserRepository {
     return await this.dao.getByUser(user);
   }
 
+  async getById(uid) {
+    return await this.dao.getById(uid);
+  }
+
   async updateDate(uid) {
     return await this.dao.updateDate(uid);
   }

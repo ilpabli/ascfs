@@ -13,13 +13,21 @@ const usersRouter = Router();
 
 usersRouter.post(
   "/",
-  passport.authenticate("register", {
-    failureRedirect: "/registerfail",
-    failureMessage: false,
-    session: false,
-  }),
-  async (req, res) => {
-    res.send(req.user);
+  (req, res, next) => {
+    passport.authenticate("register", { session: false }, (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        return res.status(401).json({ error: info.message });
+      }
+      req.logIn(user, { session: false }, (err) => {
+        if (err) {
+          return next(err);
+        }
+        res.send(user);
+      });
+    })(req, res, next);
   }
 );
 
@@ -29,18 +37,23 @@ usersRouter.post("/auth", (req, res, next) => {
       return next(err);
     }
     if (!user) {
-      return res.status(401).json({ message: info.message });
+      return res.status(401).json({ error: info.message });
     }
     req.logIn(user, { session: false }, (err) => {
       if (err) {
         return next(err);
       }
-      const token = generateToken(user); // Asegúrate de que generateToken esté definido y funcione correctamente
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 60000,
-      });
-      return res.status(200).json({ message: "Login Success" });
+      const token = generateToken(user);
+      return res
+        .cookie("token", token, {
+          httpOnly: true,
+          maxAge: 12 * 60 * 60 * 1000,
+        })
+        .status(200)
+        .json({
+          status: "success",
+          role: user?.role,
+        });
     });
   })(req, res, next);
 });
@@ -61,7 +74,7 @@ usersRouter.delete("/:user", async (req, res) => {
   }
 });
 
-usersRouter.put("/:user", async (req, res) => {
+usersRouter.put("/:user", middlewarePassportJWT, async (req, res) => {
   try {
     const user = await userController.getByUser(req.params.user);
     if (req.user.role === "admin") {
@@ -98,7 +111,7 @@ usersRouter.get("/", async (req, res) => {
 
 usersRouter.get("/technicians", async (req, res) => {
   const listTechnicians = await userController.getAllTechnicians();
-  
+
   try {
     res.status(201).send(listTechnicians);
   } catch (err) {
@@ -114,7 +127,5 @@ usersRouter.get("/:user", async (req, res) => {
     res.status(500).send({ err });
   }
 });
-
-
 
 export { usersRouter };

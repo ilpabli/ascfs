@@ -28,8 +28,11 @@ export default class UserMongoDAO {
     return newList;
   }
 
-  async  getAllTechnicians() {
-    return await this.model.find({ role: 'technician' }).populate("tickets").lean();
+  async getAllTechnicians() {
+    return await this.model
+      .find({ role: "technician" })
+      .populate("tickets")
+      .lean();
   }
 
   async createUser(userData) {
@@ -41,6 +44,13 @@ export default class UserMongoDAO {
       throw new Error(`User ${id} not found`);
     }
     return await this.model.findOne({ user: user }).populate("tickets").lean();
+  }
+
+  async getById(uid) {
+    if (!uid) {
+      throw new Error(`User ${uid} not found`);
+    }
+    return await this.model.findOne({ _id: uid }).populate("tickets").lean();
   }
 
   async updateDate(uid) {

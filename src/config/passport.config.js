@@ -29,6 +29,7 @@ const incializePassport = () => {
       { passReqToCallback: true, usernameField: "user" },
       async (req, username, password, done) => {
         const { first_name, last_name, img, email, role } = req.body;
+        console.log(req.body);
         try {
           let user = await userController.getByUser(username);
           if (user) {

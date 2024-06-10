@@ -22,6 +22,18 @@ export const ticketSchema = new mongoose.Schema({
       return format(date, "HH:mm yyyy-MM-dd");
     },
   },
+  ticket_assignedAt: {
+    type: String,
+    default: () => {
+      return "";
+    },
+  },
+  ticket_closedAt: {
+    type: String,
+    default: () => {
+      return "";
+    },
+  },
   job_data: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "clients",

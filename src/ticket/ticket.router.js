@@ -68,13 +68,13 @@ ticketsRouter.put("/:ticket", async (req, res) => {
 
 ticketsRouter.put("/assing/:ticket", async (req, res) => {
   try {
-    const ticket = await ticketController.getTicketforId(req.params.ticket); 
-      const updateTicket = await ticketController.assingTicket(
-        req.params.ticket,
-        req.body
-      );
-      req.logger.info("User Assigned");
-      res.status(201).send(updateTicket);
+    const ticket = await ticketController.getTicketforId(req.params.ticket);
+    const updateTicket = await ticketController.assingTicket(
+      req.params.ticket,
+      req.body
+    );
+    req.logger.info("User Assigned");
+    res.status(201).send(updateTicket);
   } catch (err) {
     res.status(500).send({ err });
   }
