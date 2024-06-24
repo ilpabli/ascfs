@@ -11,9 +11,7 @@ import {
 const userController = new UserRepository(new Users());
 const usersRouter = Router();
 
-usersRouter.post(
-  "/",
-  (req, res, next) => {
+usersRouter.post("/",(req, res, next) => {
     passport.authenticate("register", { session: false }, (err, user, info) => {
       if (err) {
         return next(err);
@@ -43,7 +41,7 @@ usersRouter.post("/auth", (req, res, next) => {
       if (err) {
         return next(err);
       }
-      const token = generateToken(user);
+      const token = generateToken({user: user?.user, role: user?.role});
       return res
         .cookie("token", token, {
           httpOnly: true,
@@ -53,6 +51,8 @@ usersRouter.post("/auth", (req, res, next) => {
         .json({
           status: "success",
           role: user?.role,
+          token: token,
+          user: user?.user
         });
     });
   })(req, res, next);

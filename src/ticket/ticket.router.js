@@ -20,7 +20,7 @@ ticketsRouter.post("/", async (req, res) => {
   }
 });
 
-ticketsRouter.get("/", async (req, res) => {
+ticketsRouter.get("/", middlewarePassportJWT, async (req, res) => {
   try {
     let listTickets = await ticketController.getTickets();
     res.status(201).send(listTickets);
