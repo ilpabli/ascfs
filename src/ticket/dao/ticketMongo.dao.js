@@ -64,8 +64,35 @@ export default class ProductMongoDAO {
     return await this.model.updateOne({ ticket_id: id }, field);
   }
 
-  async assingTicket(ticketId, assing) {
-    const user = await userModel.findOne({user: assing.user });
+  async assignTicket(ticketId, assing) {
+    try {
+      if (assing.user === "refresh") {
+        const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+        if (!ticket) {
+          throw new Error(`Ticket ${ticketId} not found`);
+        }
+        const user = await userModel.findOne({ user: ticket.assigned_to });
+        if (!user) {
+          throw new Error(`User not defined in ticket`);
+        }
+        const updatedUser = await userModel.findOneAndUpdate(
+          { _id: user._id },
+          { $pull: { tickets: ticket._id } },
+          { new: true }
+        );
+        if (!updatedUser) {
+          throw new Error(`Failed to update user ${user._id}`);
+        }
+        return await this.model.updateOne(
+          { ticket_id: ticketId },
+          { assigned_to: "" }
+        );
+      }
+    } catch (error) {
+      throw error
+    }
+    try {
+      const user = await userModel.findOne({user: assing.user });
     if (!user) {
       throw new Error(`User ${assing.user} not found`);
     }
@@ -79,6 +106,9 @@ export default class ProductMongoDAO {
       { ticket_id: ticketId },
       { assigned_to: user.user }
     );
+    } catch (error) {
+      throw error
+    }
   }
 
   async deleteTicket(ticketData) {

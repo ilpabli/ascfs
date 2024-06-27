@@ -1,10 +1,8 @@
 import { Router } from "express";
 import ClientRepository from "./client.repository.js";
 import { Clients } from "../config/factory.js";
-import passport from "passport";
 import {
   generateToken,
-  isAdmin,
   middlewarePassportJWT,
 } from "../middleware/jwt.middleware.js";
 

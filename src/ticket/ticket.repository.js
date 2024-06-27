@@ -27,7 +27,7 @@ export default class TicketRepository {
     return await this.dao.updateTicket(id, field);
   }
 
-  async assingTicket(ticketId, assing) {
+  async assignTicket(ticketId, assing) {
     return await this.dao.assingTicket(ticketId, assing);
   }
 

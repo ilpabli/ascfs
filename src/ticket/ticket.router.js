@@ -3,7 +3,7 @@ import TicketRepository from "./ticket.repository.js";
 import { Tickets } from "../config/factory.js";
 import {
   middlewarePassportJWT,
-  isAdminoPremium,
+  authorizeRoles,
 } from "../middleware/jwt.middleware.js";
 
 const ticketController = new TicketRepository(new Tickets());
@@ -66,17 +66,17 @@ ticketsRouter.put("/:ticket", async (req, res) => {
   }
 });
 
-ticketsRouter.put("/assing/:ticket", async (req, res) => {
+ticketsRouter.put("/assign/:ticket", async (req, res) => {
   try {
     const ticket = await ticketController.getTicketforId(req.params.ticket);
-    const updateTicket = await ticketController.assingTicket(
+    const updateTicket = await ticketController.assignTicket(
       req.params.ticket,
       req.body
     );
     req.logger.info("User Assigned");
     res.status(201).send(updateTicket);
-  } catch (err) {
-    res.status(500).send({ err });
+  } catch (error) {
+    res.status(500).send({ error: error.message});
   }
 });
 
