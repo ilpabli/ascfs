@@ -2,6 +2,7 @@ import { ticketModel } from "../model/ticket.model.js";
 import { clientModel } from "../../client/model/client.model.js";
 import { userModel } from "../../user/model/user.model.js";
 import MailingService from "../../mailing/mailing.service.js";
+import { getGMTMinus3Date } from "../../utils/time.util.js";
 
 export default class ProductMongoDAO {
   constructor() {
@@ -9,83 +10,203 @@ export default class ProductMongoDAO {
     this.mailingService = new MailingService();
   }
 
-  async addTicket(ticket) {
-    if (
-      !ticket.ticket_id ||
-      !ticket.job_data ||
-      !ticket.number_ele_esc ||
-      !ticket.description
-    ) {
-      const missingProperties = [];
-      if (!ticket.ticket_id) missingProperties.push("ticket_id");
-      if (!ticket.job_data) missingProperties.push("job_data");
-      if (!ticket.number_ele_esc) missingProperties.push("number_ele_esc");
-      if (!ticket.description) missingProperties.push("description");
+  async addTicket(ticket, user) {
+    try {
+      if (
+        !ticket.ticket_id ||
+        !ticket.job_data ||
+        !ticket.number_ele_esc ||
+        !ticket.description
+      ) {
+        const missingProperties = [];
+        if (!ticket.ticket_id) missingProperties.push("ticket_id");
+        if (!ticket.job_data) missingProperties.push("job_data");
+        if (!ticket.number_ele_esc) missingProperties.push("number_ele_esc");
+        if (!ticket.description) missingProperties.push("description");
 
-      const errorMessage = `Missing required properties: ${missingProperties.join(
-        ", "
-      )}`;
-      throw new Error(errorMessage);
+        const errorMessage = `Missing required properties: ${missingProperties.join(
+          ", "
+        )}`;
+        throw new Error(errorMessage);
+      }
+      const job = await clientModel.findOne({ job_number: ticket.job_data });
+      if (!job) {
+        throw new Error(`Job with job_number ${ticket.job_data} not found`);
+      }
+      ticket.job_data = job._id;
+      if (user.user) {
+        ticket.owner = user._id;
+      }
+      return await this.model.create(ticket);
+    } catch (error) {
+      throw error;
     }
-    const job = await clientModel.findOne({ job_number: ticket.job_data });
-    if (!job) {
-      throw new Error(`Job with job_number ${ticket.job_data} not found`);
-    }
-    ticket.job_data = job._id;
-    return await this.model.create(ticket);
   }
 
   async getTickets() {
-    return await this.model.find().lean().populate("job_data");
+    try {
+      return await this.model
+        .find()
+        .lean()
+        .populate("job_data")
+        .populate({
+          path: "assigned_to",
+          select: "-password",
+        })
+        .populate({
+          path: "owner",
+          select: "user",
+        });
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getTicketsFiltered(limit, page, query) {
-    let options = { limit, page };
-    let filter = {};
-    if (query?.ticket_status) {
-      filter.ticket_status = query.ticket_status;
+  async getTicketsFiltered(query) {
+    try {
+      let options = {};
+      let filter = {};
+      if (query?.ticket_status) {
+        filter.ticket_status = query.ticket_status;
+      }
+      if (query?.assigned_to) {
+        filter.assigned_to = query.assigned_to;
+      }
+      return await this.model
+        .find(filter, options)
+        .lean()
+        .populate("job_data")
+        .populate({
+          path: "assigned_to",
+          select: "-password",
+        })
+        .populate({
+          path: "owner",
+          select: "user",
+        });
+    } catch (error) {
+      throw error;
     }
-    return await this.model.find(filter, options).lean().populate("job_data");
   }
 
   async getTicketsforSocket() {
-    return await this.model.find({ status_ele_esc: 'Fuera de servicio' }).lean().populate("job_data");
+    return await this.model
+      .find({ status_ele_esc: "Fuera de servicio" })
+      .lean()
+      .populate("job_data")
+      .populate({
+        path: "assigned_to",
+        select: "-password",
+      })
+      .populate({
+        path: "owner",
+        select: "user",
+      });
   }
 
   async getTicketforId(id) {
-    const ticket = await this.model.findOne({ ticket_id: id }).lean();
-    if (!ticket) {
-      throw new Error(`Ticket ${id} not found`);
+    try {
+      const ticket = await this.model.findOne({ ticket_id: id }).lean();
+      if (!ticket) {
+        throw new Error(`Ticket ${id} not found`);
+      }
+      return await this.model
+        .findOne({ ticket_id: id })
+        .lean()
+        .populate("job_data")
+        .populate({
+          path: "assigned_to",
+          select: "-password",
+        })
+        .populate({
+          path: "owner",
+          select: "user",
+        });
+    } catch (error) {
+      throw error;
     }
-    return await this.model.findOne({ ticket_id: id }).lean().populate("job_data");
   }
 
   async updateTicket(id, field) {
-    return await this.model.updateOne({ ticket_id: id }, field);
+    try {
+      return await this.model.updateOne({ ticket_id: id }, field);
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async assingTicket(ticketId, assing) {
-    const user = await userModel.findOne({user: assing.user });
-    if (!user) {
-      throw new Error(`User ${assing.user} not found`);
+  async assignTicket(ticketId, assing) {
+    try {
+      if (assing.user === "refresh") {
+        const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+        if (!ticket) {
+          throw new Error(`Ticket ${ticketId} not found`);
+        }
+        const user = await userModel.findOne({ _id: ticket.assigned_to });
+        if (!user) {
+          throw new Error(`User not defined in ticket`);
+        }
+        const updatedUser = await userModel.findOneAndUpdate(
+          { _id: user._id },
+          { $pull: { tickets: ticket._id } },
+          { new: true }
+        );
+        if (!updatedUser) {
+          throw new Error(`Failed to update user ${user._id}`);
+        }
+        return await this.model.updateOne(
+          { ticket_id: ticketId },
+          { assigned_to: null, ticket_assignedAt: null }
+        );
+      }
+    } catch (error) {
+      throw error;
     }
-    const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
-    if (!ticket) {
-      throw new Error(`Ticket ${ticketId} not found`);
+    try {
+      const user = await userModel.findOne({ user: assing.user });
+      if (!user) {
+        throw new Error(`User ${assing.user} not found`);
+      }
+      const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+      if (!ticket) {
+        throw new Error(`Ticket ${ticketId} not found`);
+      }
+      user.tickets.push(ticket);
+      await user.save();
+      const gmtMinus3Date = getGMTMinus3Date();
+      return await this.model.updateOne(
+        { ticket_id: ticketId },
+        { assigned_to: user._id, ticket_assignedAt: gmtMinus3Date }
+      );
+    } catch (error) {
+      throw error;
     }
-    user.tickets.push(ticket);
-    await user.save();
-    return await this.model.updateOne(
-      { ticket_id: ticketId },
-      { assigned_to: user.user }
-    );
   }
 
-  async deleteTicket(ticketData) {
-    const ticket = await this.model.findOne({ user: ticketData });
-    if (!ticket) {
-      throw new Error(`Ticket ${ticketData} not found`);
+  async deleteTicket(ticketId) {
+    try {
+      const ticket = await this.model.findOne({ ticket_id: ticketId });
+      if (!ticket) {
+        throw new Error(`Ticket ${ticketId} not found`);
+      }
+      const ticketAssigned = ticket.assigned_to;
+      if ((ticket.assigned_to = !"")) {
+        const user = await userModel.findOne({ user: ticketAssigned });
+        if (!user) {
+          return this.model.deleteOne({ ticket_id: ticketId });
+        }
+        const updatedUser = await userModel.findOneAndUpdate(
+          { _id: user._id },
+          { $pull: { tickets: ticket._id } },
+          { new: true }
+        );
+        if (!updatedUser) {
+          throw new Error(`Failed to update user ${user._id}`);
+        }
+      }
+      return this.model.deleteOne({ ticket_id: ticketId });
+    } catch (error) {
+      throw error;
     }
-    return this.model.deleteOne({ ticket_id: ticketData });
   }
 }

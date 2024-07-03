@@ -23,7 +23,10 @@ const middlewarePassportJWT = async (req, res, next) => {
       }
 
       if (!usr) {
-        return res.redirect("/login");
+        return res
+          .status(401)
+          .clearCookie("token")
+          .json({ status: "Unauthorized", message: "Token no valido!" });
       }
 
       req.user = usr;
@@ -34,53 +37,19 @@ const middlewarePassportJWT = async (req, res, next) => {
   }
 };
 
-const isAuth = async (req, res, next) => {
-  try {
-    passport.authenticate("jwt", { session: false }, (err, usr, info) => {
-      if (err) {
-        return next(err);
+const authorizeRoles = (allowedRoles) => {
+  return async (req, res, next) => {
+    try {
+      const userRole = req.user && req.user.role;
+      if (allowedRoles.includes(userRole)) {
+        next();
+      } else {
+        throw new Error("Access denied");
       }
-      if (usr) {
-        return res.redirect("/");
-      }
-      next();
-    })(req, res, next);
-  } catch (error) {
-    res.status(500).send("Internal Server Error");
-  }
-};
-
-const isAdminoPremium = async (req, res, next) => {
-  try {
-    const userRole = req.user && req.user.role;
-    if (userRole === "admin" || userRole === "premium") {
-      next();
-    } else {
-      throw new Error("Acceso denegado. Debes ser administrador.");
+    } catch (error) {
+      res.status(403).json({ error: error.message });
     }
-  } catch (error) {
-    res.status(403).json({ error: error.message });
-  }
+  };
 };
 
-const isAdmin = async (req, res, next) => {
-  try {
-    const userRole = req.user && req.user.role;
-    if (userRole === "admin") {
-      next();
-    } else {
-      throw new Error("Acceso denegado. Debes ser administrador.");
-    }
-  } catch (error) {
-    res.status(403).json({ error: error.message });
-  }
-};
-
-export {
-  generateToken,
-  isValidToken,
-  middlewarePassportJWT,
-  isAuth,
-  isAdmin,
-  isAdminoPremium,
-};
+export { generateToken, isValidToken, middlewarePassportJWT, authorizeRoles };

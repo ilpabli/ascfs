@@ -17,12 +17,7 @@ export default {
   PORT: process.env.PORT || 8080,
   DB: process.env.DB,
   SECRET: process.env.SECRET,
-  GITSECRET: process.env.GITSECRET,
-  GITID: process.env.GITID,
   PERSISTENCE: program.opts().db,
   ENVIROMENT: ENVIROMENT,
-  MAIL_SERVICE: process.env.MAIL_SERVICE,
-  MAIL_USER: process.env.MAIL_USER,
-  MAIL_PASS: process.env.MAIL_PASS,
   FRONTEND_URL: process.env.FRONTEND_URL,
 };

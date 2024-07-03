@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { format } from "date-fns";
 
 const userSchema = new mongoose.Schema({
   first_name: String,
@@ -15,6 +14,7 @@ const userSchema = new mongoose.Schema({
   },
   password: String,
   tickets: {
+    index: true,
     type: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -40,11 +40,11 @@ const userSchema = new mongoose.Schema({
     },
   },
   last_connection: {
-    type: String,
+    type: Date,
     default: () => {
-      const date = new Date();
-      date.setMinutes(date.getMinutes());
-      return format(date, "HH:mm yyyy-MM-dd");
+      const now = new Date();
+      const gmtMinus3 = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      return gmtMinus3;
     },
   },
 });

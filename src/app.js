@@ -17,8 +17,8 @@ const app = express();
 app.use(
   cors({
     credentials: true,
-    origin: [enviroment. FRONTEND_URL, 'http://127.0.0.1:3000'],
-    preflightContinue: false
+    origin: enviroment.FRONTEND_URL,
+    preflightContinue: false,
   })
 );
 app.use(express.json());

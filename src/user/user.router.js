@@ -4,32 +4,28 @@ import { Users } from "../config/factory.js";
 import passport from "passport";
 import {
   generateToken,
-  isAdmin,
   middlewarePassportJWT,
 } from "../middleware/jwt.middleware.js";
 
 const userController = new UserRepository(new Users());
 const usersRouter = Router();
 
-usersRouter.post(
-  "/",
-  (req, res, next) => {
-    passport.authenticate("register", { session: false }, (err, user, info) => {
+usersRouter.post("/", (req, res, next) => {
+  passport.authenticate("register", { session: false }, (err, user, info) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({ error: info.message });
+    }
+    req.logIn(user, { session: false }, (err) => {
       if (err) {
         return next(err);
       }
-      if (!user) {
-        return res.status(401).json({ error: info.message });
-      }
-      req.logIn(user, { session: false }, (err) => {
-        if (err) {
-          return next(err);
-        }
-        res.send(user);
-      });
-    })(req, res, next);
-  }
-);
+      res.send(user);
+    });
+  })(req, res, next);
+});
 
 usersRouter.post("/auth", (req, res, next) => {
   passport.authenticate("login", { session: false }, (err, user, info) => {
@@ -43,24 +39,61 @@ usersRouter.post("/auth", (req, res, next) => {
       if (err) {
         return next(err);
       }
-      const token = generateToken(user);
+      const userToken = {
+        role: user?.role,
+        user: user?.user,
+      };
+      const token = generateToken(userToken);
       return res
         .cookie("token", token, {
           httpOnly: true,
-          maxAge: 12 * 60 * 60 * 1000,
+          maxAge: 365 * 24 * 60 * 60 * 1000,
         })
         .status(200)
         .json({
           status: "success",
-          role: user?.role,
+          user: userToken,
+          token: token,
         });
     });
   })(req, res, next);
 });
 
-usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
-  const updateDate = await userController.updateDate(req.user._id);
-  res.clearCookie("token").redirect("/login");
+usersRouter.get("/", async (req, res) => {
+  const listUsers = await userController.getAllFiltered();
+  try {
+    res.status(201).send(listUsers);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
+});
+
+usersRouter.get("/technicians", async (req, res) => {
+  const listTechnicians = await userController.getAllTechnicians();
+
+  try {
+    res.status(201).send(listTechnicians);
+  } catch (err) {
+    res.status(500).send({ err });
+  }
+});
+
+usersRouter.get("/:user", async (req, res) => {
+  const user = await userController.getByUser(req.params.user);
+  try {
+    res.status(201).send(user);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
+});
+
+usersRouter.get("/:user/tickets", async (req, res) => {
+  const user = await userController.getTicketsForUser(req.params.user);
+  try {
+    res.status(201).send(user);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
 });
 
 usersRouter.delete("/:user", async (req, res) => {
@@ -96,35 +129,7 @@ usersRouter.put("/:user", middlewarePassportJWT, async (req, res) => {
       res.status(403).send("Permission denied");
     }
   } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.get("/", async (req, res) => {
-  const listUsers = await userController.getAllFiltered();
-  try {
-    res.status(201).send(listUsers);
-  } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.get("/technicians", async (req, res) => {
-  const listTechnicians = await userController.getAllTechnicians();
-
-  try {
-    res.status(201).send(listTechnicians);
-  } catch (err) {
-    res.status(500).send({ err });
-  }
-});
-
-usersRouter.get("/:user", async (req, res) => {
-  const listUsers = await userController.getByUser(req.params.user);
-  try {
-    res.status(201).send(listUsers);
-  } catch (err) {
-    res.status(500).send({ err });
+    res.status(500).send({ status: "error", error: err.message });
   }
 });
 

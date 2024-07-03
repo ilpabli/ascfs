@@ -22,6 +22,14 @@ const cookieExtractor = (req) => {
   return token;
 };
 
+const jwtOptions = {
+  jwtFromRequest: jwtExtract.fromExtractors([
+    jwtExtract.fromAuthHeaderAsBearerToken(),
+    cookieExtractor,
+  ]),
+  secretOrKey: enviroment.SECRET,
+};
+
 const incializePassport = () => {
   passport.use(
     "register",
@@ -116,32 +124,18 @@ const incializePassport = () => {
   );
   passport.use(
     "jwt",
-    new jwtStrategy(
-      {
-        jwtFromRequest: jwtExtract.fromExtractors([cookieExtractor]),
-        secretOrKey: enviroment.SECRET,
-      },
-      (payload, done) => {
-        done(null, payload);
-      }
-    ),
-    async (payload, done) => {
+    new jwtStrategy(jwtOptions, async (payload, done) => {
       try {
-        return done(null, payload);
+        const user = await userController.getByUser(payload?.user);
+        if (!user) {
+          return done(null, false);
+        }
+        return done(null, user);
       } catch (error) {
-        done(error);
+        return done(error, false);
       }
-    }
+    })
   );
-
-  passport.serializeUser((user, done) => {
-    done(null, user._id);
-  });
-
-  passport.deserializeUser(async (id, done) => {
-    const user = await userController.getById(id);
-    done(null, user);
-  });
 };
 
 export default incializePassport;

@@ -1,10 +1,8 @@
 import { Router } from "express";
 import ClientRepository from "./client.repository.js";
 import { Clients } from "../config/factory.js";
-import passport from "passport";
 import {
   generateToken,
-  isAdmin,
   middlewarePassportJWT,
 } from "../middleware/jwt.middleware.js";
 
@@ -27,7 +25,7 @@ clientsRouter.get("/", async (req, res) => {
     let listClients = await clientController.getAll();
     res.status(201).send(listClients);
   } catch (err) {
-    res.status(500).send({ err });
+    res.status(500).send({ status: "error", error: err.message });
   }
 });
 

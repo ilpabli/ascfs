@@ -23,6 +23,10 @@ export default class UserRepository {
     return await this.dao.getByUser(user);
   }
 
+  async getTicketsForUser(user) {
+    return await this.dao.getTicketsForUser(user);
+  }
+
   async getById(uid) {
     return await this.dao.getById(uid);
   }

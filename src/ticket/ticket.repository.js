@@ -3,16 +3,20 @@ export default class TicketRepository {
     this.dao = dao;
   }
 
-  async addTicket(ticket) {
-    return await this.dao.addTicket(ticket);
+  async addTicket(ticket, user) {
+    return await this.dao.addTicket(ticket, user);
   }
 
   async getTickets() {
     return await this.dao.getTickets();
   }
 
-  async getTicketsFiltered(limit, page, query) {
-    return await this.dao.getTicketsFiltered(limit, page, query);
+  async getTicketsFiltered(query) {
+    return await this.dao.getTicketsFiltered(query);
+  }
+
+  async getTicketsforTech(user, query) {
+    return await this.dao.getTicketsforTech(user, query);
   }
 
   async getTicketsforSocket() {
@@ -27,11 +31,11 @@ export default class TicketRepository {
     return await this.dao.updateTicket(id, field);
   }
 
-  async assingTicket(ticketId, assing) {
-    return await this.dao.assingTicket(ticketId, assing);
+  async assignTicket(ticketId, assing) {
+    return await this.dao.assignTicket(ticketId, assing);
   }
 
-  async deleteTicket(ticketData) {
-    return await this.dao.deleteTicket(ticketData);
+  async deleteTicket(ticketId) {
+    return await this.dao.deleteTicket(ticketId);
   }
 }

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import mongoosePaginate from "mongoose-paginate-v2";
-import { format } from "date-fns";
+import { getGMTMinus3Date, getDateGMT } from "../../utils/time.util.js";
 
 export const ticketSchema = new mongoose.Schema({
   ticket_id: {
@@ -14,15 +14,27 @@ export const ticketSchema = new mongoose.Schema({
     default: "Abierto",
     index: true,
   },
-  ticket_createdAt: {
-    type: String, 
+  ticket_date: {
+    type: Date,
     default: () => {
-      const date = new Date();
-      date.setMinutes(date.getMinutes());
-      return format(date, "HH:mm yyyy-MM-dd");
+      const gmtMinus3 = getDateGMT();
+      return gmtMinus3;
+    },
+  },
+  ticket_createdAt: {
+    type: String,
+    default: () => {
+      const gmtMinus3Date = getGMTMinus3Date();
+      return gmtMinus3Date;
     },
   },
   ticket_assignedAt: {
+    type: String,
+    default: () => {
+      return "";
+    },
+  },
+  ticket_workingAt: {
     type: String,
     default: () => {
       return "";
@@ -54,8 +66,8 @@ export const ticketSchema = new mongoose.Schema({
     ref: "users",
   },
   assigned_to: {
-    type: String,
-    default: "",
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
   },
   description: {
     type: String,
@@ -69,6 +81,7 @@ export const ticketSchema = new mongoose.Schema({
     type: String,
     enum: ["Fuera de servicio", "En servicio"],
     default: "Fuera de servicio",
+    index: true,
   },
   rt: {
     type: String,
