@@ -59,44 +59,44 @@ usersRouter.post("/auth", (req, res, next) => {
   })(req, res, next);
 });
 
-usersRouter.get("/", async (req, res) => {
-  const listUsers = await userController.getAllFiltered();
+usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
   try {
+    const listUsers = await userController.getAllFiltered();
     res.status(201).send(listUsers);
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
   }
 });
 
-usersRouter.get("/technicians", async (req, res) => {
-  const listTechnicians = await userController.getAllTechnicians();
-
+usersRouter.get("/tickets",middlewarePassportJWT, async (req, res) => {
   try {
+    const {user} = req.user
+    const tickets4Usr = await userController.getTicketsForUser(user);
+    res.status(201).send(tickets4Usr.tickets);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
+});
+
+usersRouter.get("/technicians", middlewarePassportJWT, async (req, res) => {
+  try {
+    const listTechnicians = await userController.getAllTechnicians();
     res.status(201).send(listTechnicians);
   } catch (err) {
     res.status(500).send({ err });
   }
 });
 
-usersRouter.get("/:user", async (req, res) => {
-  const user = await userController.getByUser(req.params.user);
+usersRouter.get("/:user", middlewarePassportJWT, async (req, res) => {
   try {
+    const user = await userController.getByUser(req.params.user);
     res.status(201).send(user);
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
   }
 });
 
-usersRouter.get("/:user/tickets", async (req, res) => {
-  const user = await userController.getTicketsForUser(req.params.user);
-  try {
-    res.status(201).send(user);
-  } catch (err) {
-    res.status(500).send({ status: "error", error: err.message });
-  }
-});
-
-usersRouter.delete("/:user", async (req, res) => {
+usersRouter.delete("/:user", middlewarePassportJWT, async (req, res) => {
   try {
     const delUser = await userController.deleteUser(req.params.user);
     req.logger.info("User Delete");

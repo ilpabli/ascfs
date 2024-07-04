@@ -35,6 +35,10 @@ export default class TicketRepository {
     return await this.dao.assignTicket(ticketId, assing);
   }
 
+  async workingTicket(ticketId, state, user) {
+    return await this.dao.workingTicket(ticketId, state, user);
+  }
+
   async deleteTicket(ticketId) {
     return await this.dao.deleteTicket(ticketId);
   }

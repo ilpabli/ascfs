@@ -21,7 +21,6 @@ const middlewarePassportJWT = async (req, res, next) => {
       if (err) {
         return next(err);
       }
-
       if (!usr) {
         return res
           .status(401)

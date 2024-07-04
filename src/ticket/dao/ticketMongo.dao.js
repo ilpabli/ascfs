@@ -1,13 +1,11 @@
 import { ticketModel } from "../model/ticket.model.js";
 import { clientModel } from "../../client/model/client.model.js";
 import { userModel } from "../../user/model/user.model.js";
-import MailingService from "../../mailing/mailing.service.js";
 import { getGMTMinus3Date } from "../../utils/time.util.js";
 
 export default class ProductMongoDAO {
   constructor() {
     this.model = ticketModel;
-    this.mailingService = new MailingService();
   }
 
   async addTicket(ticket, user) {
@@ -156,7 +154,7 @@ export default class ProductMongoDAO {
         }
         return await this.model.updateOne(
           { ticket_id: ticketId },
-          { assigned_to: null, ticket_assignedAt: null }
+          { assigned_to: null, ticket_assignedAt: "", ticket_workingAt: "", ticket_status: "Abierto" }
         );
       }
     } catch (error) {
@@ -178,6 +176,40 @@ export default class ProductMongoDAO {
         { ticket_id: ticketId },
         { assigned_to: user._id, ticket_assignedAt: gmtMinus3Date }
       );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async workingTicket(ticketId, state, usr) {
+    try {
+      const ticket = await this.model.findOne({ ticket_id: ticketId }).populate({
+        path: "assigned_to",
+        select: "-password",
+      }).lean()
+      if (!ticket) {
+        throw new Error(`Ticket ${ticketId} not found`);
+      }
+      const user = await userModel.findOne({ user: usr.user })
+      if (!user) {
+        throw new Error(`User ${usr.user} not found`);
+      }
+
+      const { ticket_workingAt, ticket_closedAt, solution, status_ele_esc, ticket_status } = state;
+      const gmtMinus3Date = getGMTMinus3Date();
+      const updateFields = {};
+      if (ticket_workingAt !== undefined) updateFields.ticket_workingAt = gmtMinus3Date;
+      if (ticket_closedAt !== undefined) updateFields.ticket_closedAt = gmtMinus3Date;
+      if (solution !== undefined) updateFields.solution = solution;
+      if (ticket_status !== undefined) updateFields.ticket_status = ticket_status;
+      if (status_ele_esc !== undefined) updateFields.status_ele_esc = status_ele_esc;
+      if (user.role === "admin" || user.role === "supervisor"){       
+        return await this.model.updateOne({ _id: ticket._id }, updateFields);}
+         else if (user.user === ticket.assigned_to.user){
+          return await this.model.updateOne({ _id: ticket._id }, updateFields)
+        }
+        throw new Error(`Role o user not authorized`);
+      ;
     } catch (error) {
       throw error;
     }

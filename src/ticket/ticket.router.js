@@ -39,25 +39,13 @@ ticketsRouter.get("/:ticket", middlewarePassportJWT, async (req, res) => {
 
 ticketsRouter.put("/:ticket", middlewarePassportJWT, async (req, res) => {
   try {
-    const ticket = await ticketController.getTicketforId(req.params.ticket);
-    if (req.user.role === "admin") {
+    console.log(req.user);
       const updateTicket = await ticketController.updateTicket(
         req.params.ticket,
         req.body
       );
       req.logger.info("Ticket Updated");
       res.status(201).send(updateTicket);
-    } else if (product.owner === req.user.email) {
-      const updateTicket = await ticketController.updateTicket(
-        req.params.ticket,
-        req.body
-      );
-      req.logger.info("Product Updated by premium user");
-      res.status(201).send(updateTicket);
-    } else {
-      req.logger.warning("You dont have permissions");
-      res.status(403).send("Permission denied");
-    }
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
   }
@@ -68,7 +56,6 @@ ticketsRouter.put(
   middlewarePassportJWT,
   async (req, res) => {
     try {
-      const ticket = await ticketController.getTicketforId(req.params.ticket);
       const updateTicket = await ticketController.assignTicket(
         req.params.ticket,
         req.body
@@ -76,6 +63,25 @@ ticketsRouter.put(
       req.logger.info("User Assigned");
       res.status(201).send(updateTicket);
     } catch (err) {
+      res.status(500).send({ status: "error", error: err.message });
+    }
+  }
+);
+
+ticketsRouter.put(
+  "/working/:ticket",
+  middlewarePassportJWT,
+  async (req, res) => {
+    try {
+      const workingTicket = await ticketController.workingTicket(
+        req.params.ticket,
+        req.body,
+        req?.user
+      );
+      req.logger.info("Working Ticket");
+      res.status(201).send(workingTicket);
+    } catch (err) {
+      console.log(err);
       res.status(500).send({ status: "error", error: err.message });
     }
   }
