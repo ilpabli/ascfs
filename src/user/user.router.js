@@ -2,6 +2,7 @@ import { Router } from "express";
 import UserRepository from "./user.repository.js";
 import { Users } from "../config/factory.js";
 import passport from "passport";
+import UserDTO from "./dto/user.dto.js";
 import {
   generateToken,
   middlewarePassportJWT,
@@ -47,7 +48,7 @@ usersRouter.post("/auth", (req, res, next) => {
       return res
         .cookie("token", token, {
           httpOnly: true,
-          maxAge: 365 * 24 * 60 * 60 * 1000,
+          maxAge: 30 * 24 * 60 * 60 * 1000,
         })
         .status(200)
         .json({
@@ -68,9 +69,9 @@ usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
   }
 });
 
-usersRouter.get("/tickets",middlewarePassportJWT, async (req, res) => {
+usersRouter.get("/tickets", middlewarePassportJWT, async (req, res) => {
   try {
-    const {user} = req.user
+    const { user } = req.user;
     const tickets4Usr = await userController.getTicketsForUser(user);
     res.status(201).send(tickets4Usr.tickets);
   } catch (err) {
@@ -90,7 +91,8 @@ usersRouter.get("/technicians", middlewarePassportJWT, async (req, res) => {
 usersRouter.get("/:user", middlewarePassportJWT, async (req, res) => {
   try {
     const user = await userController.getByUser(req.params.user);
-    res.status(201).send(user);
+    const userDTO = UserDTO.fromUser(user);
+    res.status(201).send(userDTO);
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
   }
@@ -109,25 +111,12 @@ usersRouter.delete("/:user", middlewarePassportJWT, async (req, res) => {
 
 usersRouter.put("/:user", middlewarePassportJWT, async (req, res) => {
   try {
-    const user = await userController.getByUser(req.params.user);
-    if (req.user.role === "admin") {
-      const updateUser = await userController.updateUser(
-        req.params.user,
-        req.body
-      );
-      req.logger.info("User Updated");
-      res.status(201).send(updateUser);
-    } else if (req.user.user === req.params.user) {
-      const updateUser = await userController.updateUser(
-        req.params.user,
-        req.body
-      );
-      req.logger.info("Product Updated by owner");
-      res.status(201).send(updateUser);
-    } else {
-      req.logger.warning("You dont have permissions");
-      res.status(403).send("Permission denied");
-    }
+    const updateUser = await userController.updateUser(
+      req.params.user,
+      req.body
+    );
+    req.logger.info("User Updated");
+    res.status(201).send(updateUser);
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
   }

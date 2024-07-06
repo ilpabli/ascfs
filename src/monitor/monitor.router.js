@@ -4,10 +4,7 @@ import { Router } from "express";
 const monitorRouter = Router();
 
 // Definimos la ruta para el home
-monitorRouter.get("/", (req, res) => {
-  // Renderizo la vista del CHAT
-  res.render("chat");
-});
+monitorRouter.get("/", (req, res) => {});
 
 // Exportamos el router
 export { monitorRouter };

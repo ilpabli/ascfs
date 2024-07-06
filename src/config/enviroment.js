@@ -20,5 +20,5 @@ export default {
   PERSISTENCE: program.opts().db,
   ENVIROMENT: ENVIROMENT,
   FRONTEND_URL: process.env.FRONTEND_URL,
-  WEBSOCKET_URL: process.env.WEBSOCKET_URL,
+  MOBILE_URL: process.env.MOBILE_URL,
 };
