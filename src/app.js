@@ -9,7 +9,6 @@ import { loggerMiddleware } from "./middleware/logger.middleware.js";
 import { ticketsRouter } from "./ticket/ticket.router.js";
 import { usersRouter } from "./user/user.router.js";
 import { clientsRouter } from "./client/client.router.js";
-import { monitorRouter } from "./monitor/monitor.router.js";
 import { initSocket } from "./monitor/monitor.socket.js";
 
 const app = express();
@@ -34,7 +33,6 @@ app.use(passport.initialize());
 app.use("/api/tickets", ticketsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/clients", clientsRouter);
-app.use("/monitor", monitorRouter);
 
 const webServer = app.listen(enviroment.PORT, () => {
   console.log(`Listen on ${enviroment.PORT}`);

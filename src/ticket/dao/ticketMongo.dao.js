@@ -35,7 +35,13 @@ export default class ProductMongoDAO {
       if (user.user) {
         ticket.owner = user._id;
       }
-      return await this.model.create(ticket);
+      const createdTicket = await this.model.create(ticket);
+      await clientModel.findByIdAndUpdate(
+        job._id,
+        { $push: { tickets: createdTicket._id } },
+        { new: true }
+      );
+      return createdTicket;
     } catch (error) {
       throw error;
     }
@@ -154,7 +160,12 @@ export default class ProductMongoDAO {
         }
         return await this.model.updateOne(
           { ticket_id: ticketId },
-          { assigned_to: null, ticket_assignedAt: "", ticket_workingAt: "", ticket_status: "Abierto" }
+          {
+            assigned_to: null,
+            ticket_assignedAt: "",
+            ticket_workingAt: "",
+            ticket_status: "Abierto",
+          }
         );
       }
     } catch (error) {
@@ -183,33 +194,45 @@ export default class ProductMongoDAO {
 
   async workingTicket(ticketId, state, usr) {
     try {
-      const ticket = await this.model.findOne({ ticket_id: ticketId }).populate({
-        path: "assigned_to",
-        select: "-password",
-      }).lean()
+      const ticket = await this.model
+        .findOne({ ticket_id: ticketId })
+        .populate({
+          path: "assigned_to",
+          select: "-password",
+        })
+        .lean();
       if (!ticket) {
         throw new Error(`Ticket ${ticketId} not found`);
       }
-      const user = await userModel.findOne({ user: usr.user })
+      const user = await userModel.findOne({ user: usr.user });
       if (!user) {
         throw new Error(`User ${usr.user} not found`);
       }
 
-      const { ticket_workingAt, ticket_closedAt, solution, status_ele_esc, ticket_status } = state;
+      const {
+        ticket_workingAt,
+        ticket_closedAt,
+        solution,
+        status_ele_esc,
+        ticket_status,
+      } = state;
       const gmtMinus3Date = getGMTMinus3Date();
       const updateFields = {};
-      if (ticket_workingAt !== undefined) updateFields.ticket_workingAt = gmtMinus3Date;
-      if (ticket_closedAt !== undefined) updateFields.ticket_closedAt = gmtMinus3Date;
+      if (ticket_workingAt !== undefined)
+        updateFields.ticket_workingAt = gmtMinus3Date;
+      if (ticket_closedAt !== undefined)
+        updateFields.ticket_closedAt = gmtMinus3Date;
       if (solution !== undefined) updateFields.solution = solution;
-      if (ticket_status !== undefined) updateFields.ticket_status = ticket_status;
-      if (status_ele_esc !== undefined) updateFields.status_ele_esc = status_ele_esc;
-      if (user.role === "admin" || user.role === "supervisor"){       
-        return await this.model.updateOne({ _id: ticket._id }, updateFields);}
-         else if (user.user === ticket.assigned_to.user){
-          return await this.model.updateOne({ _id: ticket._id }, updateFields)
-        }
-        throw new Error(`Role o user not authorized`);
-      ;
+      if (ticket_status !== undefined)
+        updateFields.ticket_status = ticket_status;
+      if (status_ele_esc !== undefined)
+        updateFields.status_ele_esc = status_ele_esc;
+      if (user.role === "admin" || user.role === "supervisor") {
+        return await this.model.updateOne({ _id: ticket._id }, updateFields);
+      } else if (user.user === ticket.assigned_to.user) {
+        return await this.model.updateOne({ _id: ticket._id }, updateFields);
+      }
+      throw new Error(`Role o user not authorized`);
     } catch (error) {
       throw error;
     }
@@ -217,23 +240,39 @@ export default class ProductMongoDAO {
 
   async deleteTicket(ticketId) {
     try {
-      const ticket = await this.model.findOne({ ticket_id: ticketId });
+      const ticket = await this.model
+        .findOne({ ticket_id: ticketId })
+        .populate("job_data")
+        .populate("assigned_to");
       if (!ticket) {
         throw new Error(`Ticket ${ticketId} not found`);
       }
-      const ticketAssigned = ticket.assigned_to;
-      if ((ticket.assigned_to = !"")) {
-        const user = await userModel.findOne({ user: ticketAssigned });
-        if (!user) {
-          return this.model.deleteOne({ ticket_id: ticketId });
+      if (ticket.assigned_to && ticket.assigned_to.user) {
+        const user = await userModel.findOne({ user: ticket.assigned_to.user });
+        if (user) {
+          const updatedUser = await userModel.findOneAndUpdate(
+            { _id: user._id },
+            { $pull: { tickets: ticket._id } },
+            { new: true }
+          );
+          if (!updatedUser) {
+            throw new Error(`Failed to update user ${user._id}`);
+          }
         }
-        const updatedUser = await userModel.findOneAndUpdate(
-          { _id: user._id },
-          { $pull: { tickets: ticket._id } },
-          { new: true }
-        );
-        if (!updatedUser) {
-          throw new Error(`Failed to update user ${user._id}`);
+      }
+      if (ticket.job_data && ticket.job_data.job_number) {
+        const job = await clientModel.findOne({
+          job_number: ticket.job_data.job_number,
+        });
+        if (job) {
+          const updateJob = await clientModel.findOneAndUpdate(
+            { _id: job._id },
+            { $pull: { tickets: ticket._id } },
+            { new: true }
+          );
+          if (!updateJob) {
+            throw new Error(`Failed to update client ${job._id}`);
+          }
         }
       }
       return this.model.deleteOne({ ticket_id: ticketId });

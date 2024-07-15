@@ -6,7 +6,13 @@ let Tickets;
 let Clients;
 switch (enviroment.PERSISTENCE.toLowerCase()) {
   case "mongo":
-    mongoose.connect(enviroment.DB);
+    mongoose
+      .connect(enviroment.DB, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      })
+      .then(() => console.log("Conexión exitosa a MongoDB"))
+      .catch((error) => console.error("Error de conexión a MongoDB:", error));
     const { default: UserMongoDAO } = await import(
       "../user/dao/userMongo.dao.js"
     );

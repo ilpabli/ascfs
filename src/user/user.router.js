@@ -48,7 +48,11 @@ usersRouter.post("/auth", (req, res, next) => {
       return res
         .cookie("token", token, {
           httpOnly: true,
+          secure: true,
+          sameSite: "lax",
           maxAge: 30 * 24 * 60 * 60 * 1000,
+          path: "/",
+          domain: ".railway.app",
         })
         .status(200)
         .json({
@@ -106,6 +110,24 @@ usersRouter.delete("/:user", middlewarePassportJWT, async (req, res) => {
   } catch (err) {
     req.logger.error("User not found");
     res.status(400).send({ status: "error", error: err.message });
+  }
+});
+
+usersRouter.put("/:user/location", middlewarePassportJWT, async (req, res) => {
+  try {
+    if (req.params.user !== req.user.user) {
+      throw new Error(
+        "El usuario que intentas actualizar no es igual al de tu token"
+      );
+    }
+    const updateUser = await userController.updateLocation(
+      req.params.user,
+      req.body
+    );
+    req.logger.info("Location Updated");
+    res.status(201).send(updateUser);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
   }
 });
 

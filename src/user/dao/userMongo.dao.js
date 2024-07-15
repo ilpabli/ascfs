@@ -132,4 +132,24 @@ export default class UserMongoDAO {
       throw error;
     }
   }
+
+  async updateLocation(usr, location) {
+    try {
+      if ("gps_point" in location) {
+        if (
+          !location.gps_point ||
+          typeof location.gps_point !== "object" ||
+          !("lat" in location.gps_point) ||
+          !("lng" in location.gps_point)
+        ) {
+          throw new Error(
+            "gps_point debe ser un objeto con propiedades lat y lng"
+          );
+        }
+      }
+      return await this.model.updateOne({ user: usr }, location);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

@@ -87,6 +87,10 @@ export const ticketSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  contact: {
+    type: String,
+    default: "",
+  },
   files: [
     {
       filename: { type: String, required: true },
