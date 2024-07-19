@@ -32,6 +32,10 @@ export function initSocket(server) {
     console.log("Nuevo espectador conectado!");
     socket.emit("tickets", await ticketController.getTicketsforSocket());
 
+    socket.on("getLocation", async () => {
+      io.emit("locationUpdate");
+    });
+
     socket.on("disconnect", () => {
       console.log("Se ha desconectado un espectador!");
     });
