@@ -37,12 +37,22 @@ export default class UserMongoDAO {
     }
   }
 
-  async getAllTechnicians() {
+  async getAllTechnicians(query) {
     try {
+      const gmtMinus3 = getDateGMT();
+      if (query?.last_location_update === "12") {
+        const twelveHoursAgo = new Date(gmtMinus3 - 12 * 60 * 60 * 1000);
+        return await this.model
+        .find({ 
+          role: "technician",
+          last_location_update: { $gte: twelveHoursAgo }
+        })
+        .select("-password -tickets")
+        .lean();
+      }
       return await this.model
         .find({ role: "technician" })
-        .select("-password")
-        .populate("tickets")
+        .select("-password -tickets")
         .lean();
     } catch (error) {
       throw error;
@@ -145,7 +155,8 @@ export default class UserMongoDAO {
           "gps_point debe ser un objeto con propiedades lat y lng"
         );
       }
-      return await this.model.updateOne({ user: usr }, location);
+      const gmtMinus3 = getDateGMT();
+      return await this.model.updateOne({ user: usr },{ $set: location, last_location_update: gmtMinus3} );
     } catch (error) {
       throw error;
     }

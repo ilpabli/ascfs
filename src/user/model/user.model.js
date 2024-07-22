@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { getDateGMT } from "../../utils/time.util.js";
 
 const userSchema = new mongoose.Schema({
   first_name: String,
@@ -42,10 +43,12 @@ const userSchema = new mongoose.Schema({
   last_connection: {
     type: Date,
     default: () => {
-      const now = new Date();
-      const gmtMinus3 = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      const gmtMinus3 = getDateGMT();
       return gmtMinus3;
     },
+  },
+  last_location_update: {
+    type: Date,
   },
 });
 

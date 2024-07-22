@@ -10,6 +10,10 @@ export default class ProductMongoDAO {
 
   async addTicket(ticket, user) {
     try {
+      const ticketExist = await this.model.findOne({ticket_id: ticket.ticket_id})
+      if (ticketExist) {
+        throw new Error(`Ticket number ${ticket.ticket_id} exist`);
+      }
       if (
         !ticket.ticket_id ||
         !ticket.job_data ||

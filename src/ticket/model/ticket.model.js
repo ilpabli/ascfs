@@ -85,11 +85,13 @@ export const ticketSchema = new mongoose.Schema({
   },
   rt: {
     type: String,
-    default: "",
   },
   contact: {
     type: String,
-    default: "",
+  },
+  priority: {
+    type: String,
+    enum: ["Gente Encerrada", "Accidente"],
   },
   files: [
     {

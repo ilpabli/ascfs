@@ -36,6 +36,14 @@ export function initSocket(server) {
       io.emit("locationUpdate");
     });
 
+    socket.on("getTickets", async () => {
+      socket.emit("tickets", await ticketController.getTicketsforSocket());
+    });
+
+    socket.on("priorityStart", async (data) => {
+      io.emit("sendAlert", data);
+    });
+
     socket.on("disconnect", () => {
       console.log("Se ha desconectado un espectador!");
     });

@@ -85,7 +85,7 @@ usersRouter.get("/tickets", middlewarePassportJWT, async (req, res) => {
 
 usersRouter.get("/technicians", middlewarePassportJWT, async (req, res) => {
   try {
-    const listTechnicians = await userController.getAllTechnicians();
+    const listTechnicians = await userController.getAllTechnicians(req.query);
     res.status(201).send(listTechnicians);
   } catch (err) {
     res.status(500).send({ err });
