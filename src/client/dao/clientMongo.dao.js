@@ -9,6 +9,25 @@ export default class UserMongoDAO {
     return await this.model.find().lean();
   }
 
+  async getAllFiltered(limit, page, query) {
+    try {
+      if (page) {
+        let options = {
+          lean: true,
+          limit,
+          page,
+          select: "-tickets",
+          sort: { job_number: 1 },
+        };
+        let filter = {};
+        return await this.model.paginate(filter, options);
+      }
+      return await this.model.find().lean();
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async createClient(clientData) {
     if (
       !clientData.job_number ||
@@ -37,5 +56,29 @@ export default class UserMongoDAO {
       .findOne({ job_number: jobNumber })
       .populate("tickets")
       .lean();
+  }
+
+  async updateClient(jobNumber, field) {
+    try {
+      const job = await this.model.findOne({ job_number: jobNumber });
+      if (!job) {
+        throw new Error(`Client ${id} not found`);
+      }
+      return await this.model.updateOne({ _id: job._id }, field);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async deleteClient(jobNumber) {
+    try {
+      const job = await this.model.findOne({ job_number: jobNumber });
+      if (!job) {
+        throw new Error(`Client ${id} not found`);
+      }
+      return this.model.deleteOne({ _id: job._id });
+    } catch (error) {
+      throw error;
+    }
   }
 }

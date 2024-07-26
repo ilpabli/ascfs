@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { getDateGMT } from "../../utils/time.util.js";
+import mongoosePaginate from "mongoose-paginate-v2";
 
 const userSchema = new mongoose.Schema({
   first_name: String,
@@ -51,5 +52,6 @@ const userSchema = new mongoose.Schema({
     type: Date,
   },
 });
+userSchema.plugin(mongoosePaginate);
 
 export const userModel = mongoose.model("users", userSchema);

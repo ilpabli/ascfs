@@ -10,7 +10,9 @@ export default class ProductMongoDAO {
 
   async addTicket(ticket, user) {
     try {
-      const ticketExist = await this.model.findOne({ticket_id: ticket.ticket_id})
+      const ticketExist = await this.model.findOne({
+        ticket_id: ticket.ticket_id,
+      });
       if (ticketExist) {
         throw new Error(`Ticket number ${ticket.ticket_id} exist`);
       }
@@ -76,6 +78,9 @@ export default class ProductMongoDAO {
       let filter = {};
       if (query?.ticket_status) {
         filter.ticket_status = query.ticket_status;
+      }
+      if (query?.priority) {
+        filter.priority = ["Gente Encerrada", "Accidente"];
       }
       if (query?.assigned_to) {
         filter.assigned_to = query.assigned_to;
@@ -145,15 +150,21 @@ export default class ProductMongoDAO {
 
   async assignTicket(ticketId, assing) {
     try {
-      if (assing.user === "refresh") {
-        const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
-        if (!ticket) {
-          throw new Error(`Ticket ${ticketId} not found`);
-        }
-        const user = await userModel.findOne({ _id: ticket.assigned_to });
+      const findUserById = async (userId) => {
+        const user = await userModel.findOne({ _id: userId });
         if (!user) {
-          throw new Error(`User not defined in ticket`);
+          throw new Error(`User ${userId} not found`);
         }
+        return user;
+      };
+
+      const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+      if (!ticket) {
+        throw new Error(`Ticket ${ticketId} not found`);
+      }
+
+      if (assing.user === "refresh") {
+        const user = await findUserById(ticket.assigned_to);
         const updatedUser = await userModel.findOneAndUpdate(
           { _id: user._id },
           { $pull: { tickets: ticket._id } },
@@ -171,26 +182,25 @@ export default class ProductMongoDAO {
             ticket_status: "Abierto",
           }
         );
+      } else {
+        const user = await userModel.findOneAndUpdate(
+          { user: assing.user },
+          { $push: { tickets: ticket } },
+          { new: true }
+        );
+        if (!user) {
+          throw new Error(`User ${assing.user} not found`);
+        }
+
+        const gmtMinus3Date = getGMTMinus3Date();
+        return await this.model.updateOne(
+          { ticket_id: ticketId },
+          {
+            assigned_to: user._id,
+            ticket_assignedAt: gmtMinus3Date,
+          }
+        );
       }
-    } catch (error) {
-      throw error;
-    }
-    try {
-      const user = await userModel.findOne({ user: assing.user });
-      if (!user) {
-        throw new Error(`User ${assing.user} not found`);
-      }
-      const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
-      if (!ticket) {
-        throw new Error(`Ticket ${ticketId} not found`);
-      }
-      user.tickets.push(ticket);
-      await user.save();
-      const gmtMinus3Date = getGMTMinus3Date();
-      return await this.model.updateOne(
-        { ticket_id: ticketId },
-        { assigned_to: user._id, ticket_assignedAt: gmtMinus3Date }
-      );
     } catch (error) {
       throw error;
     }

@@ -49,8 +49,8 @@ usersRouter.post("/auth", (req, res, next) => {
         .cookie("token", token, {
           httpOnly: true,
           secure: true,
-          sameSite: "lax",
           maxAge: 30 * 24 * 60 * 60 * 1000,
+          sameSite: "lax",
           path: "/",
           domain: ".railway.app",
         })
@@ -66,7 +66,10 @@ usersRouter.post("/auth", (req, res, next) => {
 
 usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
   try {
-    const listUsers = await userController.getAllFiltered();
+    let limit = parseInt(req.query.limit) || 10;
+    let page = parseInt(req.query.page) || 1;
+    let query = req.query;
+    const listUsers = await userController.getAllFiltered(limit, page, query);
     res.status(201).send(listUsers);
   } catch (err) {
     res.status(500).send({ status: "error", error: err.message });
@@ -106,7 +109,10 @@ usersRouter.delete("/:user", middlewarePassportJWT, async (req, res) => {
   try {
     const delUser = await userController.deleteUser(req.params.user);
     req.logger.info("User Delete");
-    res.status(200).json({ message: "Usuario borrado: " + req.params.user });
+    res.status(200).json({
+      status: "success",
+      message: "Usuario borrado: " + req.params.user,
+    });
   } catch (err) {
     req.logger.error("User not found");
     res.status(400).send({ status: "error", error: err.message });

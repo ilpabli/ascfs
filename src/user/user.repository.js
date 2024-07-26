@@ -7,8 +7,8 @@ export default class UserRepository {
     return await this.dao.getAll();
   }
 
-  async getAllFiltered() {
-    return await this.dao.getAllFiltered();
+  async getAllFiltered(limit, page, query) {
+    return await this.dao.getAllFiltered(limit, page, query);
   }
 
   async getAllTechnicians(query) {

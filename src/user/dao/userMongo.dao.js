@@ -8,30 +8,26 @@ export default class UserMongoDAO {
 
   async getAll() {
     try {
-      return await this.model.find().populate("tickets").lean();
+      return await this.model.find().select("-password").lean();
     } catch (error) {
       throw error;
     }
   }
 
-  async getAllFiltered() {
+  async getAllFiltered(limit, page, query) {
     try {
-      const list = await this.model.find().populate("tickets").lean();
-      const newList = [];
-      list.forEach((eLe) => {
-        const user = {
-          _id: eLe._id,
-          full_name: eLe.first_name + " " + eLe.last_name,
-          user: eLe.user,
-          role: eLe.role,
-          img: eLe.img,
-          last_connection: eLe.last_connection,
-          email: eLe.email,
-          tickets: eLe.tickets,
-        };
-        newList.push(user);
-      });
-      return newList;
+      let options = {
+        lean: true,
+        limit,
+        page,
+        select: "-password",
+        sort: { first_name: 1 },
+      };
+      let filter = {};
+      if (query?.role) {
+        filter.role = query.role;
+      }
+      return await this.model.paginate(filter, options);
     } catch (error) {
       throw error;
     }
@@ -40,15 +36,19 @@ export default class UserMongoDAO {
   async getAllTechnicians(query) {
     try {
       const gmtMinus3 = getDateGMT();
-      if (query?.last_location_update === "12") {
-        const twelveHoursAgo = new Date(gmtMinus3 - 12 * 60 * 60 * 1000);
-        return await this.model
-        .find({ 
-          role: "technician",
-          last_location_update: { $gte: twelveHoursAgo }
-        })
-        .select("-password -tickets")
-        .lean();
+      if (query?.last_location_update) {
+        const numberSend = Number(query?.last_location_update);
+        if (!isNaN(numberSend)) {
+          const setHoursAgo = new Date(gmtMinus3 - numberSend * 60 * 60 * 1000);
+          return await this.model
+            .find({
+              role: "technician",
+              last_location_update: { $gte: setHoursAgo },
+            })
+            .select("-password -tickets")
+            .lean();
+        }
+        throw new Error(`The last location update query fail`);
       }
       return await this.model
         .find({ role: "technician" })
@@ -156,7 +156,10 @@ export default class UserMongoDAO {
         );
       }
       const gmtMinus3 = getDateGMT();
-      return await this.model.updateOne({ user: usr },{ $set: location, last_location_update: gmtMinus3} );
+      return await this.model.updateOne(
+        { user: usr },
+        { $set: location, last_location_update: gmtMinus3 }
+      );
     } catch (error) {
       throw error;
     }

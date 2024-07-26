@@ -30,18 +30,28 @@ export function initSocket(server) {
   });
   io.on("connection", async (socket) => {
     console.log("Nuevo espectador conectado!");
-    socket.emit("tickets", await ticketController.getTicketsforSocket());
 
     socket.on("getLocation", async () => {
       io.emit("locationUpdate");
     });
 
     socket.on("getTickets", async () => {
-      socket.emit("tickets", await ticketController.getTicketsforSocket());
+      try {
+        socket.emit("tickets", await ticketController.getTicketsforSocket());
+      } catch (error) {
+        throw error;
+      }
     });
 
     socket.on("priorityStart", async (data) => {
-      io.emit("sendAlert", data);
+      try {
+        io.emit(
+          "priorityAlert",
+          await ticketController.getTicketforId(data.ticket_id)
+        );
+      } catch (error) {
+        throw error;
+      }
     });
 
     socket.on("disconnect", () => {
