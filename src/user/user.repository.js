@@ -43,6 +43,10 @@ export default class UserRepository {
     return await this.dao.updateUser(id, field);
   }
 
+  async updatePassword(user, data) {
+    return await this.dao.updatePassword(user, data);
+  }
+
   async updateLocation(id, location) {
     return await this.dao.updateLocation(id, location);
   }

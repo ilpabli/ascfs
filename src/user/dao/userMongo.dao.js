@@ -1,5 +1,6 @@
 import { userModel } from "../model/user.model.js";
 import { getDateGMT } from "../../utils/time.util.js";
+import { comparePassword, hashPassword } from "../../utils/encript.util.js";
 
 export default class UserMongoDAO {
   constructor() {
@@ -8,7 +9,11 @@ export default class UserMongoDAO {
 
   async getAll() {
     try {
-      return await this.model.find().select("-password").lean();
+      return await this.model
+        .find()
+        .sort({ first_name: 1 })
+        .select("-password")
+        .lean();
     } catch (error) {
       throw error;
     }
@@ -45,6 +50,7 @@ export default class UserMongoDAO {
               role: "technician",
               last_location_update: { $gte: setHoursAgo },
             })
+            .sort({ user: 1 })
             .select("-password -tickets")
             .lean();
         }
@@ -52,6 +58,7 @@ export default class UserMongoDAO {
       }
       return await this.model
         .find({ role: "technician" })
+        .sort({ user: 1 })
         .select("-password -tickets")
         .lean();
     } catch (error) {
@@ -138,6 +145,29 @@ export default class UserMongoDAO {
   async updateUser(userData, field) {
     try {
       return await this.model.updateOne({ user: userData }, field);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async updatePassword(userId, data) {
+    try {
+      const { currentPassword, newPassword } = data;
+
+      if (!comparePassword(userId, currentPassword)) {
+        throw new Error("La contraseña actual es incorrecta");
+      }
+
+      if (comparePassword(userId, newPassword)) {
+        throw new Error("La nueva contraseña es igual a la actual");
+      }
+
+      const hashedPassword = hashPassword(newPassword);
+
+      return this.model.updateOne(
+        { user: userId.user },
+        { password: hashedPassword }
+      );
     } catch (error) {
       throw error;
     }

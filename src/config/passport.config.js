@@ -5,7 +5,6 @@ import UserRepository from "../user/user.repository.js";
 import { Users } from "./factory.js";
 import enviroment from "./enviroment.js";
 import { comparePassword, hashPassword } from "../utils/encript.util.js";
-import { isValidToken } from "../middleware/jwt.middleware.js";
 
 const LocalStrategy = local.Strategy;
 
@@ -81,40 +80,6 @@ const incializePassport = () => {
             });
           }
           const updateDate = await userController.updateDate(user._id);
-          return done(null, user);
-        } catch (error) {
-          return done(error);
-        }
-      }
-    )
-  );
-  passport.use(
-    "renewpassword",
-    new LocalStrategy(
-      {
-        passReqToCallback: true,
-        usernameField: "email",
-        passwordField: "newpassword",
-      },
-      async (req, username, newpassword, done) => {
-        try {
-          const token = req.body.token;
-          if (!isValidToken(token)) {
-            return done(null, false, {
-              message: "El token que tenes asignado es invalido",
-            });
-          }
-          const user = await userController.getByEmail(username);
-          if (comparePassword(user, newpassword)) {
-            return done(null, false, {
-              message: "La password es identica a la anterior",
-            });
-          } else {
-            const updatePw = await userController.updatePassword(
-              username,
-              hashPassword(newpassword)
-            );
-          }
           return done(null, user);
         } catch (error) {
           return done(error);

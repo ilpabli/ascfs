@@ -54,6 +54,14 @@ export function initSocket(server) {
       }
     });
 
+    socket.on("notificationStart", async (data) => {
+      try {
+        io.emit("notificationAlert", data);
+      } catch (error) {
+        throw error;
+      }
+    });
+
     socket.on("disconnect", () => {
       console.log("Se ha desconectado un espectador!");
     });

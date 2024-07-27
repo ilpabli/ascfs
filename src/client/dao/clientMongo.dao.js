@@ -22,7 +22,11 @@ export default class UserMongoDAO {
         let filter = {};
         return await this.model.paginate(filter, options);
       }
-      return await this.model.find().lean();
+      return await this.model
+        .find()
+        .sort({ job_number: 1 })
+        .select("-tickets")
+        .lean();
     } catch (error) {
       throw error;
     }

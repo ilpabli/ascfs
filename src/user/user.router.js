@@ -43,6 +43,9 @@ usersRouter.post("/auth", (req, res, next) => {
       const userToken = {
         role: user?.role,
         user: user?.user,
+        img: user?.img,
+        first_name: user?.first_name,
+        last_name: user?.last_name,
       };
       const token = generateToken(userToken);
       return res
@@ -62,6 +65,19 @@ usersRouter.post("/auth", (req, res, next) => {
         });
     });
   })(req, res, next);
+});
+
+usersRouter.post("/changepassword", middlewarePassportJWT, async (req, res) => {
+  try {
+    const updatePW = await userController.updatePassword(req.user, req.body);
+    req.logger.info("Password Updated");
+    res.status(200).json({
+      message:
+        "Password Actualizada con exito para el usuario " + req.user.user,
+    });
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
 });
 
 usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
@@ -93,6 +109,22 @@ usersRouter.get("/technicians", middlewarePassportJWT, async (req, res) => {
   } catch (err) {
     res.status(500).send({ err });
   }
+});
+
+usersRouter.get("/current", middlewarePassportJWT, async (req, res) => {
+  try {
+    const userDTO = UserDTO.fromUser(req.user);
+    res.status(201).send(userDTO);
+  } catch (err) {
+    res.status(500).send({ status: "error", error: err.message });
+  }
+});
+
+usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
+  const updateDate = await userController.updateDate(req.user._id);
+  res
+    .clearCookie("token")
+    .send({ status: "success", message: "Usuario desconectado" });
 });
 
 usersRouter.get("/:user", middlewarePassportJWT, async (req, res) => {
