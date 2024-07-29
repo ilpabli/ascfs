@@ -51,10 +51,10 @@ usersRouter.post("/auth", (req, res, next) => {
       return res
         .cookie("token", token, {
           httpOnly: true,
-          secure: true,
           maxAge: 30 * 24 * 60 * 60 * 1000,
-          sameSite: "lax",
           path: "/",
+          sameSite: "lax",
+          secure: true,
           domain: ".railway.app",
         })
         .status(200)

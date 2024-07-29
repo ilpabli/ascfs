@@ -74,8 +74,9 @@ export default class ProductMongoDAO {
 
   async getTicketsFiltered(query) {
     try {
-      let options = {};
+      let options = { sort: { ticket_date: 1 } };
       let filter = {};
+      
       if (query?.ticket_status) {
         filter.ticket_status = query.ticket_status;
       }
@@ -86,7 +87,7 @@ export default class ProductMongoDAO {
         filter.assigned_to = query.assigned_to;
       }
       return await this.model
-        .find(filter, options)
+        .find(filter, null, options)
         .lean()
         .populate("job_data")
         .populate({
@@ -104,7 +105,7 @@ export default class ProductMongoDAO {
 
   async getTicketsforSocket() {
     return await this.model
-      .find({ status_ele_esc: "Fuera de servicio" })
+      .find({ status_ele_esc: "Fuera de servicio" },null, {sort: { ticket_date: 1 }})
       .lean()
       .populate("job_data")
       .populate({
