@@ -11,6 +11,13 @@ export default class UserMongoDAO {
 
   async getAllFiltered(limit, page, query) {
     try {
+      if (query.full) {
+        return await this.model
+          .find()
+          .sort({ job_number: 1 })
+          .select("-tickets")
+          .lean();
+      }
       if (page) {
         let options = {
           lean: true,
@@ -20,6 +27,9 @@ export default class UserMongoDAO {
           sort: { job_number: 1 },
         };
         let filter = {};
+        if (query?.job_name) {
+          filter.job_name = { $regex: query.job_name, $options: "i" };
+        }
         return await this.model.paginate(filter, options);
       }
       return await this.model

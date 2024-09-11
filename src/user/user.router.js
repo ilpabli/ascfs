@@ -6,12 +6,13 @@ import UserDTO from "./dto/user.dto.js";
 import {
   generateToken,
   middlewarePassportJWT,
+  authorizeRoles,
 } from "../middleware/jwt.middleware.js";
 
 const userController = new UserRepository(new Users());
 const usersRouter = Router();
 
-usersRouter.post("/", (req, res, next) => {
+usersRouter.post("/", authorizeRoles(["admin"]), (req, res, next) => {
   passport.authenticate("register", { session: false }, (err, user, info) => {
     if (err) {
       return next(err);
@@ -80,17 +81,39 @@ usersRouter.post("/changepassword", middlewarePassportJWT, async (req, res) => {
   }
 });
 
-usersRouter.get("/", middlewarePassportJWT, async (req, res) => {
-  try {
-    let limit = parseInt(req.query.limit) || 10;
-    let page = parseInt(req.query.page) || 1;
-    let query = req.query;
-    const listUsers = await userController.getAllFiltered(limit, page, query);
-    res.status(201).send(listUsers);
-  } catch (err) {
-    res.status(500).send({ status: "error", error: err.message });
+usersRouter.post(
+  "/resetpassword",
+  middlewarePassportJWT,
+  authorizeRoles(["admin"]),
+  async (req, res) => {
+    try {
+      const refreshPassword = await userController.resetPassword(req.body.user);
+      req.logger.info("Password Reset");
+      res.status(200).json({
+        message: "Password resteada con exito para el usuario " + req.body.user,
+      });
+    } catch (err) {
+      res.status(500).send({ status: "error", error: err.message });
+    }
   }
-});
+);
+
+usersRouter.get(
+  "/",
+  middlewarePassportJWT,
+  authorizeRoles(["admin"]),
+  async (req, res) => {
+    try {
+      let limit = parseInt(req.query.limit) || 10;
+      let page = parseInt(req.query.page) || 1;
+      let query = req.query;
+      const listUsers = await userController.getAllFiltered(limit, page, query);
+      res.status(201).send(listUsers);
+    } catch (err) {
+      res.status(500).send({ status: "error", error: err.message });
+    }
+  }
+);
 
 usersRouter.get("/tickets", middlewarePassportJWT, async (req, res) => {
   try {
@@ -102,14 +125,19 @@ usersRouter.get("/tickets", middlewarePassportJWT, async (req, res) => {
   }
 });
 
-usersRouter.get("/technicians", middlewarePassportJWT, async (req, res) => {
-  try {
-    const listTechnicians = await userController.getAllTechnicians(req.query);
-    res.status(201).send(listTechnicians);
-  } catch (err) {
-    res.status(500).send({ err });
+usersRouter.get(
+  "/technicians",
+  middlewarePassportJWT,
+  authorizeRoles(["admin", "supervisor"]),
+  async (req, res) => {
+    try {
+      const listTechnicians = await userController.getAllTechnicians(req.query);
+      res.status(201).send(listTechnicians);
+    } catch (err) {
+      res.status(500).send({ err });
+    }
   }
-});
+);
 
 usersRouter.get("/current", middlewarePassportJWT, async (req, res) => {
   try {
@@ -127,29 +155,39 @@ usersRouter.post("/logout", middlewarePassportJWT, async (req, res) => {
     .send({ status: "success", message: "Usuario desconectado" });
 });
 
-usersRouter.get("/:user", middlewarePassportJWT, async (req, res) => {
-  try {
-    const user = await userController.getByUser(req.params.user);
-    const userDTO = UserDTO.fromUser(user);
-    res.status(201).send(userDTO);
-  } catch (err) {
-    res.status(500).send({ status: "error", error: err.message });
+usersRouter.get(
+  "/:user",
+  middlewarePassportJWT,
+  authorizeRoles(["admin"]),
+  async (req, res) => {
+    try {
+      const user = await userController.getByUser(req.params.user);
+      const userDTO = UserDTO.fromUser(user);
+      res.status(201).send(userDTO);
+    } catch (err) {
+      res.status(500).send({ status: "error", error: err.message });
+    }
   }
-});
+);
 
-usersRouter.delete("/:user", middlewarePassportJWT, async (req, res) => {
-  try {
-    const delUser = await userController.deleteUser(req.params.user);
-    req.logger.info("User Delete");
-    res.status(200).json({
-      status: "success",
-      message: "Usuario borrado: " + req.params.user,
-    });
-  } catch (err) {
-    req.logger.error("User not found");
-    res.status(400).send({ status: "error", error: err.message });
+usersRouter.delete(
+  "/:user",
+  middlewarePassportJWT,
+  authorizeRoles(["admin"]),
+  async (req, res) => {
+    try {
+      const delUser = await userController.deleteUser(req.params.user);
+      req.logger.info("User Delete");
+      res.status(200).json({
+        status: "success",
+        message: "Usuario borrado: " + req.params.user,
+      });
+    } catch (err) {
+      req.logger.error("User not found");
+      res.status(400).send({ status: "error", error: err.message });
+    }
   }
-});
+);
 
 usersRouter.put("/:user/location", middlewarePassportJWT, async (req, res) => {
   try {
@@ -169,17 +207,22 @@ usersRouter.put("/:user/location", middlewarePassportJWT, async (req, res) => {
   }
 });
 
-usersRouter.put("/:user", middlewarePassportJWT, async (req, res) => {
-  try {
-    const updateUser = await userController.updateUser(
-      req.params.user,
-      req.body
-    );
-    req.logger.info("User Updated");
-    res.status(201).send(updateUser);
-  } catch (err) {
-    res.status(500).send({ status: "error", error: err.message });
+usersRouter.put(
+  "/:user",
+  middlewarePassportJWT,
+  authorizeRoles(["admin", "supervisor"]),
+  async (req, res) => {
+    try {
+      const updateUser = await userController.updateUser(
+        req.params.user,
+        req.body
+      );
+      req.logger.info("User Updated");
+      res.status(201).send(updateUser);
+    } catch (err) {
+      res.status(500).send({ status: "error", error: err.message });
+    }
   }
-});
+);
 
 export { usersRouter };

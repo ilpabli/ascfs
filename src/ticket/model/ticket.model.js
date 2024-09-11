@@ -83,7 +83,7 @@ export const ticketSchema = new mongoose.Schema({
     default: "Fuera de servicio",
     index: true,
   },
-  rt: {
+  ec: {
     type: String,
   },
   contact: {
@@ -100,6 +100,7 @@ export const ticketSchema = new mongoose.Schema({
       filetype: { type: String, required: true },
     },
   ],
+  notes: [{ type: String }],
 });
 ticketSchema.plugin(mongoosePaginate);
 

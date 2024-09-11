@@ -76,7 +76,7 @@ export default class ProductMongoDAO {
     try {
       let options = { sort: { ticket_date: 1 } };
       let filter = {};
-      
+
       if (query?.ticket_status) {
         filter.ticket_status = query.ticket_status;
       }
@@ -103,9 +103,31 @@ export default class ProductMongoDAO {
     }
   }
 
+  async getTicketsforSearch(query) {
+    try {
+      let options = { sort: { ticket_date: 1 } };
+      return await this.model
+        .find(query, null, options)
+        .lean()
+        .populate("job_data")
+        .populate({
+          path: "assigned_to",
+          select: "-password",
+        })
+        .populate({
+          path: "owner",
+          select: "user",
+        });
+    } catch (error) {
+      throw error;
+    }
+  }
+
   async getTicketsforSocket() {
     return await this.model
-      .find({ status_ele_esc: "Fuera de servicio" },null, {sort: { ticket_date: 1 }})
+      .find({ status_ele_esc: "Fuera de servicio" }, null, {
+        sort: { ticket_date: 1 },
+      })
       .lean()
       .populate("job_data")
       .populate({
@@ -230,6 +252,7 @@ export default class ProductMongoDAO {
         solution,
         status_ele_esc,
         ticket_status,
+        ec,
       } = state;
       const gmtMinus3Date = getGMTMinus3Date();
       const updateFields = {};
@@ -242,12 +265,33 @@ export default class ProductMongoDAO {
         updateFields.ticket_status = ticket_status;
       if (status_ele_esc !== undefined)
         updateFields.status_ele_esc = status_ele_esc;
+      if (ec !== undefined && ec !== "") updateFields.ec = ec;
       if (user.role === "admin" || user.role === "supervisor") {
         return await this.model.updateOne({ _id: ticket._id }, updateFields);
       } else if (user.user === ticket.assigned_to.user) {
         return await this.model.updateOne({ _id: ticket._id }, updateFields);
       }
       throw new Error(`Role o user not authorized`);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async addNotes(ticketId, note, usr) {
+    try {
+      const ticket = await this.model.findOne({ ticket_id: ticketId }).lean();
+      if (!ticket) {
+        throw new Error(`Ticket ${ticketId} not found`);
+      }
+      if (!note) {
+        throw new Error(`Note not found`);
+      }
+      const combinedNote = `${note} - por ${usr?.user}`;
+      return await this.model.updateOne(
+        { _id: ticket._id },
+        { $push: { notes: combinedNote } },
+        { new: true }
+      );
     } catch (error) {
       throw error;
     }

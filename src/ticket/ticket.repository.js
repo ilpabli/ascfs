@@ -15,8 +15,8 @@ export default class TicketRepository {
     return await this.dao.getTicketsFiltered(query);
   }
 
-  async getTicketsforTech(user, query) {
-    return await this.dao.getTicketsforTech(user, query);
+  async getTicketsforSearch(query) {
+    return await this.dao.getTicketsforSearch(query);
   }
 
   async getTicketsforSocket() {
@@ -37,6 +37,10 @@ export default class TicketRepository {
 
   async workingTicket(ticketId, state, user) {
     return await this.dao.workingTicket(ticketId, state, user);
+  }
+
+  async addNotes(ticketId, note, user) {
+    return await this.dao.addNotes(ticketId, note, user);
   }
 
   async deleteTicket(ticketId) {

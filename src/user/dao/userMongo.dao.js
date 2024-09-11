@@ -32,6 +32,9 @@ export default class UserMongoDAO {
       if (query?.role) {
         filter.role = query.role;
       }
+      if (query?.first_name) {
+        filter.first_name = { $regex: query.first_name, $options: "i" };
+      }
       return await this.model.paginate(filter, options);
     } catch (error) {
       throw error;
@@ -166,6 +169,18 @@ export default class UserMongoDAO {
 
       return this.model.updateOne(
         { user: userId.user },
+        { password: hashedPassword }
+      );
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async resetPassword(userId) {
+    try {
+      const hashedPassword = hashPassword(userId);
+      return this.model.updateOne(
+        { user: userId },
         { password: hashedPassword }
       );
     } catch (error) {
