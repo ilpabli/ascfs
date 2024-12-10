@@ -35,7 +35,7 @@ ticketsRouter.get("/", middlewarePassportJWT, async (req, res) => {
   }
 });
 
-ticketsRouter.get("/search", middlewarePassportJWT, async (req, res) => {
+ticketsRouter.post("/search", middlewarePassportJWT, async (req, res) => {
   try {
     let searchTickets = await ticketController.getTicketsforSearch(req.body);
     res.status(201).send(searchTickets);
